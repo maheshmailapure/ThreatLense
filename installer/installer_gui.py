@@ -9,8 +9,16 @@ import time
 import zipfile
 import threading
 import subprocess
+import ctypes
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
+from PIL import Image, ImageTk
+
+# Set Windows App User Model ID so Taskbar shows ThreatLense icon, not Python
+try:
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("ThreatLense.Security.Installer.1.0")
+except Exception:
+    pass
 
 # EULA / Terms & Conditions Text
 EULA_TEXT = """THREATLENSE™ AUTONOMOUS AI ENDPOINT DEFENSE & INTRUSION DETECTION
@@ -60,8 +68,8 @@ class ThreatLenseInstaller(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("ThreatLense Setup")
-        self.geometry("620x460")
-        self.minsize(580, 420)
+        self.geometry("640x480")
+        self.minsize(600, 440)
         self.resizable(False, False)
         
         # Configure modern aesthetic styling
@@ -74,36 +82,76 @@ class ThreatLenseInstaller(tk.Tk):
         self.current_step = 0
         self.is_installing = False
 
+        # Set ThreatLense Window & Taskbar Icon (No default Tkinter / Python icon)
+        self.bundle_dir = get_bundle_dir()
+        self.ico_path = os.path.join(self.bundle_dir, "threatlense.ico")
+        if not os.path.exists(self.ico_path):
+            dev_ico = os.path.abspath(os.path.join(self.bundle_dir, "..", "threatlense.ico"))
+            if os.path.exists(dev_ico):
+                self.ico_path = dev_ico
+
+        if os.path.exists(self.ico_path):
+            try:
+                self.iconbitmap(self.ico_path)
+            except Exception as e:
+                print("Could not set iconbitmap:", e)
+
+        # Load ThreatLense Logo Image for UI
+        self.logo_path = os.path.join(self.bundle_dir, "threatlense_logo.png")
+        if not os.path.exists(self.logo_path):
+            dev_logo = os.path.abspath(os.path.join(self.bundle_dir, "..", "frontend", "public", "threatlense_logo.png"))
+            if os.path.exists(dev_logo):
+                self.logo_path = dev_logo
+
+        self.logo_small = None
+        self.logo_large = None
+        if os.path.exists(self.logo_path):
+            try:
+                pil_img = Image.open(self.logo_path).convert("RGBA")
+                self.logo_small = ImageTk.PhotoImage(pil_img.resize((48, 48), Image.Resampling.LANCZOS))
+                self.logo_large = ImageTk.PhotoImage(pil_img.resize((72, 72), Image.Resampling.LANCZOS))
+            except Exception as e:
+                print("Could not load logo image:", e)
+
         self.setup_ui()
         self.show_page(0)
 
     def setup_ui(self):
         # Top Header Banner
-        self.header_frame = tk.Frame(self, bg="#0f172a", height=70)
+        self.header_frame = tk.Frame(self, bg="#0f172a", height=76)
         self.header_frame.pack(side="top", fill="x")
         self.header_frame.pack_propagate(False)
 
+        # Right side Logo in header
+        if self.logo_small:
+            self.header_logo = tk.Label(self.header_frame, image=self.logo_small, bg="#0f172a")
+            self.header_logo.pack(side="right", padx=18, pady=12)
+
+        # Text on left of header
+        text_container = tk.Frame(self.header_frame, bg="#0f172a")
+        text_container.pack(side="left", fill="both", expand=True, padx=20, pady=12)
+
         self.header_title = tk.Label(
-            self.header_frame, 
+            text_container, 
             text="ThreatLense Setup", 
-            font=("Segoe UI", 13, "bold"), 
+            font=("Segoe UI", 12, "bold"), 
             fg="#38bdf8", 
             bg="#0f172a", 
             anchor="w"
         )
-        self.header_title.pack(side="top", fill="x", padx=20, pady=(12, 2))
+        self.header_title.pack(side="top", fill="x")
 
         self.header_subtitle = tk.Label(
-            self.header_frame, 
+            text_container, 
             text="Autonomous AI Intrusion Detection & Real-Time Endpoint Defense", 
             font=("Segoe UI", 9), 
             fg="#94a3b8", 
             anchor="w"
         )
-        self.header_subtitle.pack(side="top", fill="x", padx=20)
+        self.header_subtitle.pack(side="top", fill="x", pady=(2, 0))
 
         # Content Area Container
-        self.content_frame = tk.Frame(self, bg="#f8fafc", padx=25, pady=18)
+        self.content_frame = tk.Frame(self, bg="#f8fafc", padx=25, pady=16)
         self.content_frame.pack(side="top", fill="both", expand=True)
 
         # Bottom Navigation Bar
@@ -133,24 +181,33 @@ class ThreatLenseInstaller(tk.Tk):
     # --- Page 0: Welcome ---
     def create_welcome_page(self):
         page = tk.Frame(self.content_frame, bg="#f8fafc")
+        
+        top_row = tk.Frame(page, bg="#f8fafc")
+        top_row.pack(fill="x", pady=(4, 10))
+
+        if self.logo_large:
+            lbl_large_logo = tk.Label(top_row, image=self.logo_large, bg="#f8fafc")
+            lbl_large_logo.pack(side="left", padx=(0, 14))
+
         lbl_welcome = tk.Label(
-            page, 
-            text="Welcome to the ThreatLense Setup Wizard", 
+            top_row, 
+            text="Welcome to the ThreatLense\nSetup Wizard", 
             font=("Segoe UI", 13, "bold"), 
             fg="#0f172a", 
             bg="#f8fafc", 
+            justify="left",
             anchor="w"
         )
-        lbl_welcome.pack(fill="x", pady=(8, 12))
+        lbl_welcome.pack(side="left", fill="both", expand=True)
 
         desc_text = (
             "This wizard will install ThreatLense on your Windows computer.\n\n"
             "ThreatLense is an enterprise-grade Autonomous AI Endpoint Protection "
             "and Real-Time Network Intrusion Detection System powered by the Atria-Dawn-Preview "
             "deep reasoning neural engine.\n\n"
-            "Highlights:\n"
+            "Key Defensive Features:\n"
             "  • Continuous behavioral socket monitoring (SMB, RDP, Port Scans, SYN Floods)\n"
-            "  • Automatic AI triage on high-entropy & suspicious file downloads\n"
+            "  • Real-time inspection of downloaded files in your Downloads directory\n"
             "  • Autonomous firewall containment & process neutralization\n"
             "  • Zero-token baseline idle consumption\n\n"
             "Click Next to continue, or Cancel to exit Setup."
@@ -178,7 +235,7 @@ class ThreatLenseInstaller(tk.Tk):
             bg="#f8fafc", 
             anchor="w"
         )
-        lbl_title.pack(fill="x", pady=(0, 6))
+        lbl_title.pack(fill="x", pady=(0, 4))
 
         lbl_instruct = tk.Label(
             page, 
@@ -258,7 +315,7 @@ class ThreatLenseInstaller(tk.Tk):
             bg="#f8fafc", 
             anchor="w"
         )
-        lbl_title.pack(fill="x", pady=(0, 6))
+        lbl_title.pack(fill="x", pady=(0, 4))
 
         lbl_instruct = tk.Label(
             page, 
@@ -268,7 +325,7 @@ class ThreatLenseInstaller(tk.Tk):
             bg="#f8fafc", 
             anchor="w"
         )
-        lbl_instruct.pack(fill="x", pady=(0, 16))
+        lbl_instruct.pack(fill="x", pady=(0, 14))
 
         # Path Entry & Browse Button
         path_box = tk.Frame(page, bg="#f8fafc")
@@ -314,7 +371,7 @@ class ThreatLenseInstaller(tk.Tk):
             bg="#f8fafc", 
             anchor="w"
         )
-        lbl_title.pack(fill="x", pady=(0, 6))
+        lbl_title.pack(fill="x", pady=(0, 4))
 
         lbl_instruct = tk.Label(
             page, 
@@ -324,7 +381,7 @@ class ThreatLenseInstaller(tk.Tk):
             bg="#f8fafc", 
             anchor="w"
         )
-        lbl_instruct.pack(fill="x", pady=(0, 18))
+        lbl_instruct.pack(fill="x", pady=(0, 16))
 
         cb_desktop = tk.Checkbutton(
             page, 
@@ -389,15 +446,24 @@ class ThreatLenseInstaller(tk.Tk):
     # --- Page 5: Finish Page ---
     def create_finish_page(self):
         page = tk.Frame(self.content_frame, bg="#f8fafc")
+        
+        top_row = tk.Frame(page, bg="#f8fafc")
+        top_row.pack(fill="x", pady=(4, 10))
+
+        if self.logo_large:
+            lbl_large_logo = tk.Label(top_row, image=self.logo_large, bg="#f8fafc")
+            lbl_large_logo.pack(side="left", padx=(0, 14))
+
         lbl_title = tk.Label(
-            page, 
-            text="Completing the ThreatLense Setup Wizard", 
+            top_row, 
+            text="Completing the ThreatLense\nSetup Wizard", 
             font=("Segoe UI", 13, "bold"), 
             fg="#0f172a", 
             bg="#f8fafc", 
+            justify="left",
             anchor="w"
         )
-        lbl_title.pack(fill="x", pady=(8, 12))
+        lbl_title.pack(side="left", fill="both", expand=True)
 
         desc_text = (
             "ThreatLense has been successfully installed on your computer.\n\n"
@@ -414,7 +480,7 @@ class ThreatLenseInstaller(tk.Tk):
             justify="left", 
             anchor="nw"
         )
-        lbl_desc.pack(fill="both", expand=True, pady=(0, 14))
+        lbl_desc.pack(fill="both", expand=True, pady=(0, 12))
 
         cb_launch = tk.Checkbutton(
             page, 
@@ -503,7 +569,6 @@ class ThreatLenseInstaller(tk.Tk):
         payload_zip = os.path.join(bundle_dir, "payload.zip")
 
         if not os.path.exists(payload_zip):
-            # Development fallback
             dev_zip = os.path.abspath(os.path.join(bundle_dir, "..", "backend", "dist", "ThreatLense-Windows.zip"))
             if os.path.exists(dev_zip):
                 payload_zip = dev_zip
@@ -521,7 +586,6 @@ class ThreatLenseInstaller(tk.Tk):
                 self.progress_bar['maximum'] = total_files
 
                 for idx, item in enumerate(file_list):
-                    # Unpack stripping root folder if needed
                     parts = item.filename.split('/')
                     if len(parts) > 1 and parts[0] == "ThreatLense":
                         rel_path = "/".join(parts[1:])
@@ -537,25 +601,36 @@ class ThreatLenseInstaller(tk.Tk):
                     with zf.open(item) as src, open(target_file, 'wb') as dst:
                         dst.write(src.read())
 
-                    # Update progress UI
                     if idx % 10 == 0 or idx == total_files - 1:
                         self.progress_bar['value'] = idx + 1
                         self.lbl_status.config(text=f"Extracting components ({idx + 1}/{total_files})...")
                         self.lbl_file.config(text=os.path.basename(target_file))
                         self.update_idletasks()
 
-            # Create Desktop Shortcut
+            # Copy ThreatLense icon into installation directory
+            dest_ico = os.path.join(dest, "threatlense.ico")
+            if os.path.exists(self.ico_path):
+                try:
+                    import shutil
+                    shutil.copy2(self.ico_path, dest_ico)
+                except Exception:
+                    pass
+
             target_exe = os.path.join(dest, "ThreatLense.exe")
+            ico_for_shortcut = dest_ico if os.path.exists(dest_ico) else target_exe
+
+            # Create Desktop Shortcut with ThreatLense icon
             if self.create_desktop_shortcut.get():
                 self.lbl_status.config(text="Creating Desktop shortcut...")
                 self._create_shortcut(
                     target=target_exe, 
                     link_name="ThreatLense.lnk", 
                     folder=os.path.expanduser("~/Desktop"),
-                    desc="ThreatLense - Autonomous AI Cybersecurity Defense System"
+                    desc="ThreatLense - Autonomous AI Cybersecurity Defense System",
+                    icon_path=ico_for_shortcut
                 )
 
-            # Create Start Menu Shortcut
+            # Create Start Menu Shortcut with ThreatLense icon
             if self.create_start_menu_shortcut.get():
                 self.lbl_status.config(text="Creating Start Menu shortcut...")
                 start_menu = os.path.join(
@@ -567,7 +642,8 @@ class ThreatLenseInstaller(tk.Tk):
                     target=target_exe,
                     link_name="ThreatLense.lnk",
                     folder=start_menu,
-                    desc="ThreatLense - Autonomous AI Cybersecurity Defense System"
+                    desc="ThreatLense - Autonomous AI Cybersecurity Defense System",
+                    icon_path=ico_for_shortcut
                 )
 
             # Create Uninstaller Script in the application folder
@@ -584,16 +660,18 @@ class ThreatLenseInstaller(tk.Tk):
             messagebox.showerror("Error", f"Failed during installation:\n{e}")
             self.btn_cancel.config(state="normal")
 
-    def _create_shortcut(self, target, link_name, folder, desc):
-        """Creates a Windows .lnk shortcut using PowerShell and WScript.Shell."""
+    def _create_shortcut(self, target, link_name, folder, desc, icon_path=None):
+        """Creates a Windows .lnk shortcut with explicit icon using PowerShell and WScript.Shell."""
         try:
             link_path = os.path.join(folder, link_name)
+            icon_clause = f"$s.IconLocation = '{icon_path},0'; " if icon_path and os.path.exists(icon_path) else ""
             ps_script = f"""
             $ws = New-Object -ComObject WScript.Shell
             $s = $ws.CreateShortcut('{link_path}')
             $s.TargetPath = '{target}'
             $s.WorkingDirectory = '{os.path.dirname(target)}'
             $s.Description = '{desc}'
+            {icon_clause}
             $s.Save()
             """
             subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], creationflags=0x08000000)

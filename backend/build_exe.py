@@ -27,6 +27,7 @@ def build():
         "--onedir",
         "--noconsole",
         "--name", "ThreatLense",
+        "--icon=threatlense.ico",
         f"--add-data={frontend_dist};frontend_dist",
         "--hidden-import=webview",
         "--hidden-import=uvicorn.logging",

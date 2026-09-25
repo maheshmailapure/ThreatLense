@@ -21,6 +21,9 @@ def build():
     shutil.copy2(payload_src, payload_dst)
 
     print("[+] Compiling ThreatLense-Setup.exe via PyInstaller...")
+    ico_path = os.path.join(installer_dir, "threatlense.ico")
+    logo_path = os.path.join(installer_dir, "threatlense_logo.png")
+
     cmd = [
         sys.executable,
         "-m", "PyInstaller",
@@ -28,7 +31,13 @@ def build():
         "--onefile",
         "--noconsole",
         "--name", "ThreatLense-Setup",
+        f"--icon={ico_path}",
+        f"--add-data={ico_path};.",
+        f"--add-data={logo_path};.",
         f"--add-data={payload_dst};.",
+        "--hidden-import=PIL",
+        "--hidden-import=PIL.Image",
+        "--hidden-import=PIL.ImageTk",
         "installer_gui.py"
     ]
 
