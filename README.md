@@ -33,11 +33,11 @@ ThreatLense is bundled as a zero-prerequisite standalone Windows package (`Threa
 ### ⚡ 3-Step Instant Execution
 1. **Download**: Click [⬇️ Download ThreatLense-Windows.zip](https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/ThreatLense-Windows.zip) (or grab it from [GitHub Releases](https://github.com/maheshmailapure/ThreatLense/releases/tag/v1.0.0)).
 2. **Extract**: Right-click `ThreatLense-Windows.zip` $\to$ click **Extract All...**
-3. **Double-click** `ThreatLense.exe`:
+3. **Double-click** `ThreatLense.exe` (or run `Create_Desktop_Shortcut.bat`):
    - 🛡️ Automatically binds defensive socket listeners, kernel sensors, and packet inspection pipelines.
-   - 🌐 Automatically opens your default web browser to `http://127.0.0.1:8000`.
+   - 🖥️ **Native Desktop Window**: Launches as a dedicated Windows Desktop Application Window (like McAfee Antivirus / Windows Security) with **zero browser URL bar, zero tabs, and no localhost address**.
    - 🔊 Audio cyber speech initialization: *"Loading ThreatLense System"*.
-   - ⚡ **Zero Login Friction**: Instant access to your live Atria AI defense console.
+   - ⚡ **Zero Login Friction**: Instant access to your live Atria AI defense console directly from your Windows Desktop.
 
 ---
 
