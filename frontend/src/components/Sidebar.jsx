@@ -76,7 +76,7 @@ export default function Sidebar() {
     <aside className="w-60 shrink-0 bg-[#edf4f0]/95 backdrop-blur-md border-r border-slate-300/40 flex flex-col h-full select-none z-30 shadow-[4px_0_15px_rgba(152,174,165,0.25)]">
       {/* Tactile Application Header */}
       <div className="h-16 flex items-center px-4 border-b border-slate-300/30 justify-center">
-        <img src="/threatlens_logo.png" alt="ThreatLens" className="h-9 w-auto object-contain max-w-[200px]" />
+        <img src="/threatlense_logo.png" alt="ThreatLense" className="h-9 w-auto object-contain max-w-[200px]" />
       </div>
 
       {/* Nav groups */}

@@ -335,7 +335,7 @@ class AttackSimulatorService:
         model_name: str,
         db: Session
     ) -> Dict[str, Any]:
-        """Execute simulated attack scenario through AI-IDS detection and LLM decision engine."""
+        """Execute simulated attack scenario through ThreatLense detection and LLM decision engine."""
         features = None
         scenario_name = "Custom Attack Vector"
 

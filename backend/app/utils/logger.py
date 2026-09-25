@@ -18,7 +18,7 @@ logging.basicConfig(
     ]
 )
 
-logger = logging.getLogger("AI-IDS")
+logger = logging.getLogger("ThreatLense")
 
 def log_event(event_type: str, details: dict):
     """Log structured security and operational events."""

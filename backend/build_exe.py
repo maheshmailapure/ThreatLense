@@ -1,5 +1,5 @@
 """
-Build script to compile AI-IDS-Shield into a standalone Windows executable.
+Build script to compile ThreatLense into a standalone Windows executable.
 Bundles the FastAPI backend, background security sensors, and compiled React frontend.
 """
 import os
@@ -18,14 +18,14 @@ def build():
         sys.exit(1)
 
     print(f"[+] Found frontend distribution at {frontend_dist}")
-    print("[+] Packaging AI-IDS Shield into standalone Windows executable...")
+    print("[+] Packaging ThreatLense into standalone Windows executable...")
 
     cmd = [
         sys.executable,
         "-m", "PyInstaller",
         "--noconfirm",
         "--onedir",
-        "--name", "AI-IDS-Shield",
+        "--name", "ThreatLense",
         f"--add-data={frontend_dist};frontend_dist",
         "--hidden-import=uvicorn.logging",
         "--hidden-import=uvicorn.loops",
@@ -47,7 +47,7 @@ def build():
     print("[+] Executing command:", " ".join(cmd))
     res = subprocess.run(cmd, cwd=backend_dir)
     if res.returncode == 0:
-        exe_path = os.path.join(backend_dir, "dist", "AI-IDS-Shield", "AI-IDS-Shield.exe")
+        exe_path = os.path.join(backend_dir, "dist", "ThreatLense", "ThreatLense.exe")
         print(f"[+] Build succeeded! Executable generated at: {exe_path}")
     else:
         print(f"[-] PyInstaller failed with code {res.returncode}")

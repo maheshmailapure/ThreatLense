@@ -1,5 +1,5 @@
 """
-AI-IDS Shield - Desktop Standalone Launcher.
+ThreatLense - Desktop Standalone Launcher.
 Starts the Intrusion Detection System backend, autonomous sensors,
 serves the React UI, and opens the default web browser.
 """
@@ -26,7 +26,7 @@ def open_browser():
 
 def main():
     print("=" * 60)
-    print("   AI-IDS CYBERSECURITY DEFENSE SHIELD - DESKTOP AGENT")
+    print("      THREATLENSE CYBERSECURITY DEFENSE - DESKTOP AGENT")
     print("=" * 60)
     print("[+] Initializing Real-Time Endpoint Sensors & Threat Engine...")
     print("[+] Serving Web Console on http://127.0.0.1:8000")

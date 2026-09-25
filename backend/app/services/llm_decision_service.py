@@ -171,6 +171,6 @@ Respond ONLY with valid JSON.
                 "threat_summary": f"Elevated behavioral anomaly flagged (score: {anomaly_score:.3f}).",
                 "root_cause_analysis": "Packet header distribution deviates from learned K-Means centroid baseline by more than 95th percentile.",
                 "immediate_action": "Enable enhanced deep packet inspection logging for this flow session.",
-                "firewall_rule": f"iptables -A INPUT -s {source_ip} -m limit --limit 5/min -j LOG --log-prefix '[AI-IDS-ANOMALY]: '",
+                "firewall_rule": f"iptables -A INPUT -s {source_ip} -m limit --limit 5/min -j LOG --log-prefix '[ThreatLense-ANOMALY]: '",
                 "containment_strategy": "Retrain anomaly clustering baseline with current traffic profile."
             }

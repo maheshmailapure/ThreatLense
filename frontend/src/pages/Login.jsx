@@ -49,7 +49,7 @@ export default function Login() {
           <div className="w-16 h-16 rounded-full neu-circle flex items-center justify-center mx-auto mb-4 text-[#2563eb]">
             <Shield className="w-7 h-7" />
           </div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">AI-IDS Console</h2>
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">ThreatLense Console</h2>
           <p className="text-xs font-medium text-slate-500 mt-1">
             Endpoint Security & Threat Telemetry
           </p>

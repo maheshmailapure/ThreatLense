@@ -20,7 +20,7 @@ from app.utils.logger import logger, log_event
 
 class IDSAgentEngine:
     """
-    Master Real-Time Endpoint Intrusion Detection System (AI-IDS) Agent.
+    Master Real-Time Endpoint ThreatLense Intrusion Detection System Agent.
     Runs continuously as an autonomous background daemon, gathers live telemetry
     across all security surfaces, executes event correlation, evaluates risks,
     and streams updates to connected WebSocket clients.

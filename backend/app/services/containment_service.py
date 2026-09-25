@@ -26,7 +26,7 @@ class ContainmentService:
             return {"success": False, "message": "Cannot block loopback or empty IP address."}
 
         sanitized_ip = ip.strip()
-        name = rule_name or f"AI-IDS-Block-{sanitized_ip.replace(':', '_')}"
+        name = rule_name or f"ThreatLense-Block-{sanitized_ip.replace(':', '_')}"
 
         commands = [
             ["netsh", "advfirewall", "firewall", "add", "rule", f"name={name}-IN", "dir=in", "action=block", f"remoteip={sanitized_ip}"],
@@ -65,7 +65,7 @@ class ContainmentService:
             return {"success": False, "message": f"Invalid port number: {port}"}
 
         proto = protocol.upper()
-        name = rule_name or f"AI-IDS-Block-Port-{port}-{proto}"
+        name = rule_name or f"ThreatLense-Block-Port-{port}-{proto}"
 
         commands = [
             ["netsh", "advfirewall", "firewall", "add", "rule", f"name={name}-IN", f"protocol={proto}", "dir=in", "action=block", f"localport={port}"],

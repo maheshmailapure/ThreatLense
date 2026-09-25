@@ -25,8 +25,8 @@ PORT_SECURITY_RISK = {
     3306: {"service": "MySQL / MariaDB Database", "risk": "HIGH", "recommendation": "Bind to 127.0.0.1 only and disable remote root access."},
     3389: {"service": "RDP (Remote Desktop Protocol)", "risk": "HIGH", "recommendation": "Place RDP behind VPN and enforce Network Level Authentication (NLA)."},
     5432: {"service": "PostgreSQL Database", "risk": "MEDIUM", "recommendation": "Restrict pg_hba.conf to authorized client subnets."},
-    8000: {"service": "AI-IDS Backend API", "risk": "LOW", "recommendation": "Secured FastAPI REST Gateway."},
-    5173: {"service": "AI-IDS Frontend SOC Console", "risk": "LOW", "recommendation": "Vite React Dashboard."},
+    8000: {"service": "ThreatLense Backend API", "risk": "LOW", "recommendation": "Secured FastAPI REST Gateway."},
+    5173: {"service": "ThreatLense Frontend SOC Console", "risk": "LOW", "recommendation": "Vite React Dashboard."},
     8080: {"service": "HTTP Alternate / Proxy", "risk": "LOW", "recommendation": "Ensure authentication is enabled."},
 }
 

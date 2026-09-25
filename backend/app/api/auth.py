@@ -15,11 +15,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=Fals
 
 def get_current_user(token: Optional[str] = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     """Dependency to retrieve the current user, gracefully falling back to default analyst for zero-sign-in access."""
-    if not token or token == "threatlens-offline-active-token":
+    if not token or token in ("threatlense-offline-active-token", "threatlens-offline-active-token"):
         user = db.query(User).first()
         if user:
             return user
-        return User(id="threatlens-default", username="ThreatLens Analyst", email="analyst@threatlens.local", role="admin", is_active=True)
+        return User(id="threatlense-default", username="ThreatLense Analyst", email="analyst@threatlense.local", role="admin", is_active=True)
 
     payload = decode_access_token(token)
     if payload:
@@ -33,7 +33,7 @@ def get_current_user(token: Optional[str] = Depends(oauth2_scheme), db: Session 
     user = db.query(User).first()
     if user:
         return user
-    return User(id="threatlens-default", username="ThreatLens Analyst", email="analyst@threatlens.local", role="admin", is_active=True)
+    return User(id="threatlense-default", username="ThreatLense Analyst", email="analyst@threatlense.local", role="admin", is_active=True)
 
 @router.post("/login", response_model=Token)
 def login(login_data: UserLogin, db: Session = Depends(get_db)):

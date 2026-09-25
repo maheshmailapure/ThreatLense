@@ -15,7 +15,7 @@ export default function Navbar({ title = "" }) {
   return (
     <header className="h-16 bg-[#edf4f0]/90 backdrop-blur-md border-b border-slate-300/40 px-6 flex items-center justify-between sticky top-0 z-20 shadow-[0_4px_12px_rgba(152,174,165,0.2)]">
       <div className="flex items-center gap-3">
-        <img src="/threatlens_logo.png" alt="ThreatLens" className="h-8 w-auto object-contain" />
+        <img src="/threatlense_logo.png" alt="ThreatLense" className="h-8 w-auto object-contain" />
       </div>
 
       <div className="flex items-center gap-3">

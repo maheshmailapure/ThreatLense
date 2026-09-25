@@ -5,7 +5,7 @@ export default function SplashScreen({ onComplete }) {
   const [progress, setProgress] = useState(0);
   const voiceSpokenRef = useRef(false);
 
-  // High-Tech Speech Synthesis Voice: "Loading ThreatLens System"
+  // High-Tech Speech Synthesis Voice: "Loading ThreatLense System"
   const speakVoice = () => {
     if (voiceSpokenRef.current) return;
     voiceSpokenRef.current = true;
@@ -13,7 +13,7 @@ export default function SplashScreen({ onComplete }) {
     try {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel(); // Clear any stale utterances
-        const utterance = new SpeechSynthesisUtterance("Loading ThreatLens System");
+        const utterance = new SpeechSynthesisUtterance("Loading ThreatLense System");
         utterance.rate = 0.95;
         utterance.pitch = 1.05;
         utterance.volume = 1.0;
@@ -189,8 +189,8 @@ export default function SplashScreen({ onComplete }) {
               initial={{ filter: 'brightness(0.95)' }}
               animate={{ filter: ['brightness(0.98)', 'brightness(1.08)', 'brightness(0.98)'] }}
               transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-              src="/threatlens_logo.png"
-              alt="ThreatLens"
+              src="/threatlense_logo.png"
+              alt="ThreatLense"
               className="h-14 sm:h-16 w-auto object-contain drop-shadow-[0_6px_16px_rgba(37,99,235,0.22)]"
             />
           </div>
@@ -215,7 +215,7 @@ export default function SplashScreen({ onComplete }) {
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
               <span className="text-slate-600 font-medium tracking-tight">
-                Loading ThreatLens System...
+                Loading ThreatLense System...
               </span>
             </div>
             <span className="font-mono text-xs font-bold text-slate-700 bg-[#e4ece7] px-2.5 py-0.5 rounded-full shadow-[inset_1px_1px_2px_rgba(152,174,165,0.35),inset_-1px_-1px_2px_rgba(255,255,255,0.8)]">

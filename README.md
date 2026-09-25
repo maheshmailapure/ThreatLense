@@ -1,13 +1,13 @@
-# 🛡️ ThreatLens - Autonomous AI Intrusion Detection & Defense System
+# 🛡️ ThreatLense - Autonomous AI Intrusion Detection & Defense System
 
 > **Enterprise-Grade Network Intrusion Detection & Autonomous Threat Defense Powered by Atria-Dawn-Preview AI Engine**
 
 <p align="center">
   <a href="https://github.com/maheshmailapure/ThreatLense/releases/tag/v1.0.0">
-    <img src="https://img.shields.io/badge/DOWNLOAD-ThreatLens_Windows_v1.0.0_(EXE)-00E5FF?style=for-the-badge&logo=windows&logoColor=black" alt="Download Windows Release" />
+    <img src="https://img.shields.io/badge/DOWNLOAD-ThreatLense_Windows_v1.0.0_(EXE)-00E5FF?style=for-the-badge&logo=windows&logoColor=black" alt="Download Windows Release" />
   </a>
-  <a href="https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/AI-IDS-Shield-Windows.zip">
-    <img src="https://img.shields.io/badge/DIRECT_ZIP-AI--IDS--Shield--Windows.zip-7C3AED?style=for-the-badge&logo=archive&logoColor=white" alt="Direct Download Zip" />
+  <a href="https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/ThreatLense-Windows.zip">
+    <img src="https://img.shields.io/badge/DIRECT_ZIP-ThreatLense-Windows.zip-7C3AED?style=for-the-badge&logo=archive&logoColor=white" alt="Direct Download Zip" />
   </a>
   <a href="https://github.com/maheshmailapure/ThreatLense/releases">
     <img src="https://img.shields.io/badge/RELEASES-All_Versions-10B981?style=for-the-badge&logo=github&logoColor=white" alt="All Releases" />
@@ -23,20 +23,20 @@
 
 ## 📥 Direct Download & Standalone Execution
 
-ThreatLens is bundled as a zero-prerequisite standalone Windows package (`AI-IDS-Shield.exe`). Anyone can run it immediately without installing Python, Node.js, npm, or any external database.
+ThreatLense is bundled as a zero-prerequisite standalone Windows package (`ThreatLense.exe`). Anyone can run it immediately without installing Python, Node.js, npm, or any external database.
 
 | Asset Package | Target OS | Contents | Size | Direct Download Link |
 | :--- | :--- | :--- | :--- | :--- |
-| **ThreatLens Standalone Release** | Windows 10 / 11 (64-bit) | `AI-IDS-Shield.exe` + UI & AI Engine | ~96.8 MB | [⬇️ **Download AI-IDS-Shield-Windows.zip**](https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/AI-IDS-Shield-Windows.zip) |
+| **ThreatLense Standalone Release** | Windows 10 / 11 (64-bit) | `ThreatLense.exe` + UI & AI Engine | ~96.8 MB | [⬇️ **Download ThreatLense-Windows.zip**](https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/ThreatLense-Windows.zip) |
 | **All Version Releases** | All Supported | Binaries & Source Code | - | [📦 **GitHub Releases Portal**](https://github.com/maheshmailapure/ThreatLense/releases) |
 
 ### ⚡ 3-Step Instant Execution
-1. **Download**: Click [⬇️ Download AI-IDS-Shield-Windows.zip](https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/AI-IDS-Shield-Windows.zip) (or grab it from [GitHub Releases](https://github.com/maheshmailapure/ThreatLense/releases/tag/v1.0.0)).
-2. **Extract**: Right-click `AI-IDS-Shield-Windows.zip` $\to$ click **Extract All...**
-3. **Double-click** `AI-IDS-Shield.exe`:
+1. **Download**: Click [⬇️ Download ThreatLense-Windows.zip](https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/ThreatLense-Windows.zip) (or grab it from [GitHub Releases](https://github.com/maheshmailapure/ThreatLense/releases/tag/v1.0.0)).
+2. **Extract**: Right-click `ThreatLense-Windows.zip` $\to$ click **Extract All...**
+3. **Double-click** `ThreatLense.exe`:
    - 🛡️ Automatically binds defensive socket listeners, kernel sensors, and packet inspection pipelines.
    - 🌐 Automatically opens your default web browser to `http://127.0.0.1:8000`.
-   - 🔊 Audio cyber speech initialization: *"Loading ThreatLens System"*.
+   - 🔊 Audio cyber speech initialization: *"Loading ThreatLense System"*.
    - ⚡ **Zero Login Friction**: Instant access to your live Atria AI defense console.
 
 ---
@@ -160,7 +160,7 @@ ThreatLens is bundled as a zero-prerequisite standalone Windows package (`AI-IDS
 ## 8. Project Structure
 
 ```
-ai-ids/
+threatlense/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                     # FastAPI entrypoint, middleware, routes
@@ -412,7 +412,7 @@ python -m pytest tests/ -v
 
 ## 19. Academic Viva & Defense Questions
 
-**Q1: How does AI-IDS avoid data leakage in the ML pipeline?**
+**Q1: How does ThreatLense avoid data leakage in the ML pipeline?**
 *Answer:* Preprocessing scalers (`StandardScaler`), encoders (`OneHotEncoder`), feature selectors (`SelectKBest`), and dimensionality reducers (`PCA`) are fitted exclusively on the 70% training partition. The 30% test partition and subsequent inference packets are only transformed using the pre-fitted parameters.
 
 **Q2: What is the difference between supervised classification and unsupervised anomaly detection in this system?**

@@ -23,8 +23,8 @@ DownloadWatcherService.start_background_watcher()
 ids_agent.start()
 
 app = FastAPI(
-    title="AI-Based Intelligent Intrusion Detection System (AI-IDS)",
-    description="Advanced Cybersecurity IDS with Machine Learning, Real-Time Agent Telemetry & SOC Dashboard",
+    title="ThreatLense - Autonomous AI Intrusion Detection & Defense System",
+    description="ThreatLense: Advanced Cybersecurity IDS with Machine Learning, Real-Time Agent Telemetry & SOC Dashboard",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"

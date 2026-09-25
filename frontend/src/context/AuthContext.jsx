@@ -4,7 +4,7 @@ import { login as apiLogin, getCurrentUser } from '../services/api';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const defaultUser = { username: 'ThreatLens Analyst', role: 'admin' };
+  const defaultUser = { username: 'ThreatLense Analyst', role: 'admin' };
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('ids_user');
@@ -13,12 +13,12 @@ export const AuthProvider = ({ children }) => {
       return defaultUser;
     }
   });
-  const [token, setToken] = useState(() => localStorage.getItem('ids_token') || 'threatlens-offline-active-token');
+  const [token, setToken] = useState(() => localStorage.getItem('ids_token') || 'threatlense-offline-active-token');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem('ids_token')) {
-      localStorage.setItem('ids_token', 'threatlens-offline-active-token');
+      localStorage.setItem('ids_token', 'threatlense-offline-active-token');
       localStorage.setItem('ids_user', JSON.stringify(defaultUser));
     }
   }, []);

@@ -62,7 +62,7 @@ def block_remote_ip(ip_address: str):
     if platform.system() != "Windows":
         return {"status": "IGNORED", "message": "Firewall IP blocking is designed for Windows endpoints."}
     try:
-        rule_name = f"AI-IDS-Block-{ip_address.replace(':', '_')}"
+        rule_name = f"ThreatLense-Block-{ip_address.replace(':', '_')}"
         cmd = f'netsh advfirewall firewall add rule name="{rule_name}" dir=in action=block remoteip={ip_address}'
         subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return {"status": "SUCCESS", "message": f"Injected Windows Firewall block rule for {ip_address}."}
