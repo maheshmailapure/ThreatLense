@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/models:/app/models
+      - ./backend/logs:/app/logs
+      - ./backend/ids.db:/app/ids.db
+    environment:
+      - DATABASE_URL=sqlite:///./ids.db
+      - SECRET_KEY=cybersecurity_ai_ids_super_secret_jwt_key_2026_x89f
+      - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:80
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

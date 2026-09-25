@@ -1,0 +1,191 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --neu-bg: #eaf1ed;
+    --neu-surface: #edf4f0;
+    --neu-inset: #e4ece7;
+    --neu-shadow-dark: rgba(152, 174, 165, 0.48);
+    --neu-shadow-light: rgba(255, 255, 255, 0.98);
+  }
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    scroll-behavior: smooth;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  body {
+    @apply text-slate-800 antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+    /* Soft UI / Neumorphism Canvas with subtle light green ambient effects */
+    background-color: #eaf1ed;
+    background-image: 
+      radial-gradient(circle at 12% 18%, rgba(185, 238, 214, 0.45) 0%, transparent 45%),
+      radial-gradient(circle at 88% 22%, rgba(175, 232, 208, 0.38) 0%, transparent 45%),
+      radial-gradient(circle at 50% 80%, rgba(195, 242, 222, 0.4) 0%, transparent 55%);
+    background-attachment: fixed;
+  }
+}
+
+/* Minimalist Neumorphic Rounded Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #eaf1ed;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b8ccbf;
+  border-radius: 9999px;
+  border: 2px solid #eaf1ed;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #96af9e;
+}
+
+/* Soft UI / Neumorphism Component Classes */
+/* 1. Extruded Surface (Cards & Panels) */
+.glass-panel,
+.neu-flat {
+  background: #edf4f0;
+  border-radius: 24px;
+  box-shadow: 
+    10px 10px 22px rgba(152, 174, 165, 0.48), 
+    -10px -10px 22px rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+}
+
+.glass-panel-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel-hover:hover {
+  box-shadow: 
+    14px 14px 28px rgba(152, 174, 165, 0.58), 
+    -14px -14px 28px rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+}
+
+/* 2. Soft Tactile Pill Buttons & Tabs */
+.glass-pill,
+.neu-button {
+  background: #edf4f0;
+  border-radius: 16px;
+  box-shadow: 
+    5px 5px 12px rgba(152, 174, 165, 0.45), 
+    -5px -5px 12px rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #334155;
+}
+
+.glass-pill:hover,
+.neu-button:hover {
+  box-shadow: 
+    7px 7px 16px rgba(152, 174, 165, 0.55), 
+    -7px -7px 16px rgba(255, 255, 255, 1);
+  color: #0f172a;
+  transform: translateY(-0.5px);
+}
+
+.glass-pill:active,
+.neu-button:active {
+  box-shadow: 
+    inset 3px 3px 7px rgba(152, 174, 165, 0.55), 
+    inset -3px -3px 7px rgba(255, 255, 255, 0.9);
+  transform: translateY(0);
+}
+
+/* 3. Inset / Pressed Groove (Inputs, Progress Tracks, Depressed Wells) */
+.neu-pressed,
+.neu-inset {
+  background: #e4ece7;
+  border-radius: 16px;
+  box-shadow: 
+    inset 4px 4px 9px rgba(152, 174, 165, 0.55), 
+    inset -4px -4px 9px rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(152, 174, 165, 0.25);
+}
+
+/* 4. Vibrant Gradient Accent Button (from reference: royal blue to vibrant cobalt gradient) */
+.neu-accent-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 
+    6px 6px 14px rgba(37, 99, 235, 0.35), 
+    -4px -4px 10px rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neu-accent-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  box-shadow: 
+    8px 8px 18px rgba(37, 99, 235, 0.45), 
+    -4px -4px 12px rgba(255, 255, 255, 0.95);
+  transform: translateY(-0.5px);
+}
+
+.neu-accent-btn:active {
+  box-shadow: 
+    inset 3px 3px 6px rgba(0, 0, 0, 0.3),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.2);
+}
+
+/* 5. Circular Embossed Elements */
+.neu-circle {
+  border-radius: 9999px;
+  background: #edf4f0;
+  box-shadow: 
+    6px 6px 14px rgba(152, 174, 165, 0.48), 
+    -6px -6px 14px rgba(255, 255, 255, 0.95);
+}
+
+/* 6. Neumorphic Slider Track & Thumb */
+input[type="range"].neu-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  width: 100%;
+}
+
+input[type="range"].neu-slider:focus {
+  outline: none;
+}
+
+input[type="range"].neu-slider::-webkit-slider-runnable-track {
+  height: 10px;
+  background: #e4ece7;
+  border-radius: 9999px;
+  box-shadow: inset 2px 2px 5px rgba(152, 174, 165, 0.55), inset -2px -2px 5px rgba(255, 255, 255, 0.95);
+}
+
+input[type="range"].neu-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: #edf4f0;
+  box-shadow: 3px 3px 7px rgba(152, 174, 165, 0.55), -3px -3px 7px rgba(255, 255, 255, 0.95);
+  border: 3px solid #2563eb;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="range"].neu-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.12);
+  box-shadow: 4px 4px 9px rgba(152, 174, 165, 0.65), -4px -4px 9px rgba(255, 255, 255, 1);
+}
+
+
+

@@ -1,0 +1,223 @@
+{
+  "dataset_name": "NSL_KDD_Sample.csv",
+  "total_records": 3000,
+  "train_records": 2100,
+  "test_records": 900,
+  "original_features_count": 56,
+  "selected_features_count": 20,
+  "pca_components_count": 10,
+  "pca_total_variance": 97.13,
+  "pca_explained_variance_ratio": [
+    45.23,
+    25.81,
+    9.29,
+    4.76,
+    3.21,
+    2.63,
+    1.98,
+    1.66,
+    1.38,
+    1.19
+  ],
+  "selected_features": [
+    "src_bytes",
+    "dst_bytes",
+    "logged_in",
+    "count",
+    "srv_count",
+    "serror_rate",
+    "srv_serror_rate",
+    "same_srv_rate",
+    "diff_srv_rate",
+    "dst_host_count",
+    "dst_host_srv_count",
+    "dst_host_same_srv_rate",
+    "dst_host_same_src_port_rate",
+    "dst_host_serror_rate",
+    "protocol_type_icmp",
+    "protocol_type_udp",
+    "service_private",
+    "flag_REJ",
+    "flag_S0",
+    "flag_SF"
+  ],
+  "models": {
+    "Random Forest": {
+      "metrics": {
+        "accuracy": 100.0,
+        "precision": 100.0,
+        "recall": 100.0,
+        "f1_score": 100.0,
+        "false_positive_rate": 0.0,
+        "confusion_matrix": {
+          "true_negative": 468,
+          "false_positive": 0,
+          "false_negative": 0,
+          "true_positive": 432,
+          "matrix": [
+            [
+              468,
+              0
+            ],
+            [
+              0,
+              432
+            ]
+          ],
+          "labels": [
+            "Normal",
+            "Attack"
+          ]
+        },
+        "feature_importances": {
+          "dst_bytes": 0.1875,
+          "dst_host_same_srv_rate": 0.1849,
+          "src_bytes": 0.1197,
+          "count": 0.0792,
+          "same_srv_rate": 0.062,
+          "dst_host_srv_count": 0.0614,
+          "srv_count": 0.0585,
+          "flag_SF": 0.0507,
+          "serror_rate": 0.0463,
+          "srv_serror_rate": 0.0456,
+          "dst_host_count": 0.0404,
+          "logged_in": 0.0336,
+          "protocol_type_icmp": 0.0128,
+          "diff_srv_rate": 0.0121,
+          "dst_host_serror_rate": 0.003,
+          "protocol_type_udp": 0.0023,
+          "dst_host_same_src_port_rate": 0.0,
+          "service_private": 0.0,
+          "flag_S0": 0.0,
+          "flag_REJ": 0.0
+        },
+        "hyperparameters": {
+          "n_estimators": 100,
+          "random_state": 42,
+          "criterion": "gini"
+        }
+      },
+      "training_time": 0.185,
+      "status": "TRAINED"
+    },
+    "SVM": {
+      "metrics": {
+        "accuracy": 100.0,
+        "precision": 100.0,
+        "recall": 100.0,
+        "f1_score": 100.0,
+        "false_positive_rate": 0.0,
+        "confusion_matrix": {
+          "true_negative": 468,
+          "false_positive": 0,
+          "false_negative": 0,
+          "true_positive": 432,
+          "matrix": [
+            [
+              468,
+              0
+            ],
+            [
+              0,
+              432
+            ]
+          ],
+          "labels": [
+            "Normal",
+            "Attack"
+          ]
+        },
+        "hyperparameters": {
+          "kernel": "rbf",
+          "C": 1.0,
+          "random_state": 42
+        }
+      },
+      "training_time": 0.059,
+      "status": "TRAINED"
+    },
+    "K-Means": {
+      "metrics": {
+        "evaluation_type": "Unsupervised Anomaly Clustering",
+        "inertia": 5174.76,
+        "n_clusters": 5,
+        "threshold_percentile": 95.0,
+        "distance_threshold": 2.4038,
+        "mean_centroid_distance": 1.4332,
+        "hyperparameters": {
+          "n_clusters": 5,
+          "threshold_percentile": 95.0,
+          "random_state": 42
+        },
+        "accuracy": 48.67,
+        "precision": 18.75,
+        "recall": 2.08,
+        "f1_score": 3.75,
+        "false_positive_rate": 8.33,
+        "confusion_matrix": {
+          "true_negative": 429,
+          "false_positive": 39,
+          "false_negative": 423,
+          "true_positive": 9,
+          "matrix": [
+            [
+              429,
+              39
+            ],
+            [
+              423,
+              9
+            ]
+          ],
+          "labels": [
+            "Normal",
+            "Attack"
+          ]
+        },
+        "note": "Unsupervised anomaly detection evaluated by thresholding centroid distance against labeled test partition."
+      },
+      "training_time": 3.005,
+      "status": "TRAINED"
+    },
+    "Isolation Forest": {
+      "metrics": {
+        "evaluation_type": "Unsupervised Tree Isolation",
+        "contamination": 0.1,
+        "n_estimators": 100,
+        "hyperparameters": {
+          "n_estimators": 100,
+          "contamination": 0.1,
+          "random_state": 42
+        },
+        "accuracy": 58.0,
+        "precision": 78.72,
+        "recall": 17.13,
+        "f1_score": 28.14,
+        "false_positive_rate": 4.27,
+        "confusion_matrix": {
+          "true_negative": 448,
+          "false_positive": 20,
+          "false_negative": 358,
+          "true_positive": 74,
+          "matrix": [
+            [
+              448,
+              20
+            ],
+            [
+              358,
+              74
+            ]
+          ],
+          "labels": [
+            "Normal",
+            "Attack"
+          ]
+        },
+        "note": "Isolation Forest anomaly classification evaluated against test partition."
+      },
+      "training_time": 0.174,
+      "status": "TRAINED"
+    }
+  }
+}
