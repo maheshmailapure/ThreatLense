@@ -1,6 +1,18 @@
-# ThreatLens - AI Intrusion Detection & Defense System with Atria AI Neural Engine
+# 🛡️ ThreatLens - Autonomous AI Intrusion Detection & Defense System
 
-A complete, production-grade, defensive **Artificial Intelligence & Machine Learning-driven Network Intrusion Detection System (AI-IDS)** and **Security Operations Center (SOC) Platform** powered by the **Atria-Dawn-Preview** agentic reasoning engine.
+> **Enterprise-Grade Network Intrusion Detection & Autonomous Threat Defense Powered by Atria-Dawn-Preview AI Engine**
+
+<p align="center">
+  <a href="https://github.com/maheshmailapure/ThreatLense/releases/tag/v1.0.0">
+    <img src="https://img.shields.io/badge/DOWNLOAD-ThreatLens_Windows_v1.0.0_(EXE)-00E5FF?style=for-the-badge&logo=windows&logoColor=black" alt="Download Windows Release" />
+  </a>
+  <a href="https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/AI-IDS-Shield-Windows.zip">
+    <img src="https://img.shields.io/badge/DIRECT_ZIP-AI--IDS--Shield--Windows.zip-7C3AED?style=for-the-badge&logo=archive&logoColor=white" alt="Direct Download Zip" />
+  </a>
+  <a href="https://github.com/maheshmailapure/ThreatLense/releases">
+    <img src="https://img.shields.io/badge/RELEASES-All_Versions-10B981?style=for-the-badge&logo=github&logoColor=white" alt="All Releases" />
+  </a>
+</p>
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-lightgrey.svg)]()
@@ -9,15 +21,23 @@ A complete, production-grade, defensive **Artificial Intelligence & Machine Lear
 
 ---
 
-## 🚀 Standalone Windows Download & One-Click Execution
-ThreatLens is bundled as a zero-prerequisite standalone Windows application (`AI-IDS-Shield.exe`):
-1. **Download Release**: Download `AI-IDS-Shield-Windows.zip` from [GitHub Releases](https://github.com).
-2. **Extract**: Right-click $\to$ Extract All.
+## 📥 Direct Download & Standalone Execution
+
+ThreatLens is bundled as a zero-prerequisite standalone Windows package (`AI-IDS-Shield.exe`). Anyone can run it immediately without installing Python, Node.js, npm, or any external database.
+
+| Asset Package | Target OS | Contents | Size | Direct Download Link |
+| :--- | :--- | :--- | :--- | :--- |
+| **ThreatLens Standalone Release** | Windows 10 / 11 (64-bit) | `AI-IDS-Shield.exe` + UI & AI Engine | ~96.8 MB | [⬇️ **Download AI-IDS-Shield-Windows.zip**](https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/AI-IDS-Shield-Windows.zip) |
+| **All Version Releases** | All Supported | Binaries & Source Code | - | [📦 **GitHub Releases Portal**](https://github.com/maheshmailapure/ThreatLense/releases) |
+
+### ⚡ 3-Step Instant Execution
+1. **Download**: Click [⬇️ Download AI-IDS-Shield-Windows.zip](https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/AI-IDS-Shield-Windows.zip) (or grab it from [GitHub Releases](https://github.com/maheshmailapure/ThreatLense/releases/tag/v1.0.0)).
+2. **Extract**: Right-click `AI-IDS-Shield-Windows.zip` $\to$ click **Extract All...**
 3. **Double-click** `AI-IDS-Shield.exe`:
-   - Automatically initializes host network sockets, kernel monitors, and baseline telemetry.
-   - Automatically opens your default web browser to `http://127.0.0.1:8000`.
-   - Audio cyber speech initialization: *"Loading ThreatLens System"*.
-   - **Zero Login Friction**: Instant access to your live defense console.
+   - 🛡️ Automatically binds defensive socket listeners, kernel sensors, and packet inspection pipelines.
+   - 🌐 Automatically opens your default web browser to `http://127.0.0.1:8000`.
+   - 🔊 Audio cyber speech initialization: *"Loading ThreatLens System"*.
+   - ⚡ **Zero Login Friction**: Instant access to your live Atria AI defense console.
 
 ---
 
