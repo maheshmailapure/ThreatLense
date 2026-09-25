@@ -3,11 +3,11 @@
 > **Enterprise-Grade Network Intrusion Detection & Autonomous Threat Defense Powered by Atria-Dawn-Preview AI Engine**
 
 <p align="center">
-  <a href="https://github.com/maheshmailapure/ThreatLense/releases/tag/v1.0.0">
-    <img src="https://img.shields.io/badge/DOWNLOAD-ThreatLense_Windows_v1.0.0_(EXE)-00E5FF?style=for-the-badge&logo=windows&logoColor=black" alt="Download Windows Release" />
+  <a href="https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/ThreatLense-Setup.exe">
+    <img src="https://img.shields.io/badge/DOWNLOAD-ThreatLense_Setup.exe_(Windows_Installer)-00E5FF?style=for-the-badge&logo=windows&logoColor=black" alt="Download Windows Installer" />
   </a>
   <a href="https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/ThreatLense-Windows.zip">
-    <img src="https://img.shields.io/badge/DIRECT_ZIP-ThreatLense-Windows.zip-7C3AED?style=for-the-badge&logo=archive&logoColor=white" alt="Direct Download Zip" />
+    <img src="https://img.shields.io/badge/PORTABLE_ZIP-ThreatLense--Windows.zip-7C3AED?style=for-the-badge&logo=archive&logoColor=white" alt="Portable Zip Release" />
   </a>
   <a href="https://github.com/maheshmailapure/ThreatLense/releases">
     <img src="https://img.shields.io/badge/RELEASES-All_Versions-10B981?style=for-the-badge&logo=github&logoColor=white" alt="All Releases" />
@@ -15,29 +15,31 @@
 </p>
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-lightgrey.svg)]()
+[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20(64--bit)-lightgrey.svg)]()
 [![Atria AI](https://img.shields.io/badge/AI%20Core-Atria--Dawn--Preview%20MoE-purple.svg)]()
-[![Build](https://img.shields.io/badge/Executable-Standalone%20Win64%20EXE-green.svg)]()
+[![Build](https://img.shields.io/badge/Installer-Standalone%20Setup%20EXE-green.svg)]()
 
 ---
 
-## 📥 Direct Download & Standalone Execution
+## 📥 Direct Download & Windows Installation
 
-ThreatLense is bundled as a zero-prerequisite standalone Windows package (`ThreatLense.exe`). Anyone can run it immediately without installing Python, Node.js, npm, or any external database.
+ThreatLense provides a dedicated single-file Windows installer (**`ThreatLense-Setup.exe`**). Anyone can download and install it on any Windows 10 or Windows 11 PC without needing Python, Node.js, npm, or any external database.
 
-| Asset Package | Target OS | Contents | Size | Direct Download Link |
+| Package | Supported Platform | Format | Size | Direct Download Link |
 | :--- | :--- | :--- | :--- | :--- |
-| **ThreatLense Standalone Release** | Windows 10 / 11 (64-bit) | `ThreatLense.exe` + UI & AI Engine | ~96.8 MB | [⬇️ **Download ThreatLense-Windows.zip**](https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/ThreatLense-Windows.zip) |
-| **All Version Releases** | All Supported | Binaries & Source Code | - | [📦 **GitHub Releases Portal**](https://github.com/maheshmailapure/ThreatLense/releases) |
+| 🛡️ **ThreatLense Official Setup** | Windows 10 / 11 (64-bit) | Standalone `.exe` Installer with EULA & Desktop Setup | ~109.8 MB | [⬇️ **Download ThreatLense-Setup.exe**](https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/ThreatLense-Setup.exe) |
+| 📦 **ThreatLense Portable Zip** | Windows 10 / 11 (64-bit) | Portable Zero-Install `.zip` Archive | ~95 MB | [⬇️ **Download ThreatLense-Windows.zip**](https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/ThreatLense-Windows.zip) |
+| 🌐 **All Versions & Release Assets**| Any Supported | GitHub Releases Portal | - | [📦 **GitHub Releases Portal**](https://github.com/maheshmailapure/ThreatLense/releases) |
 
-### ⚡ 3-Step Instant Execution
-1. **Download**: Click [⬇️ Download ThreatLense-Windows.zip](https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/ThreatLense-Windows.zip) (or grab it from [GitHub Releases](https://github.com/maheshmailapure/ThreatLense/releases/tag/v1.0.0)).
-2. **Extract**: Right-click `ThreatLense-Windows.zip` $\to$ click **Extract All...**
-3. **Double-click** `ThreatLense.exe` (or run `Create_Desktop_Shortcut.bat`):
-   - 🛡️ Automatically binds defensive socket listeners, kernel sensors, and packet inspection pipelines.
-   - 🖥️ **Native Desktop Window**: Launches as a dedicated Windows Desktop Application Window (like McAfee Antivirus / Windows Security) with **zero browser URL bar, zero tabs, and no localhost address**.
-   - 🔊 Audio cyber speech initialization: *"Loading ThreatLense System"*.
-   - ⚡ **Zero Login Friction**: Instant access to your live Atria AI defense console directly from your Windows Desktop.
+### ⚡ 3-Step Instant Windows Installation
+1. **Download**: Click [⬇️ **Download ThreatLense-Setup.exe**](https://github.com/maheshmailapure/ThreatLense/releases/download/v1.0.0/ThreatLense-Setup.exe).
+2. **Run Setup**: Double-click `ThreatLense-Setup.exe` to open the ThreatLense Setup Wizard.
+3. **Accept Terms & Finish**:
+   - Review the **End User License Agreement (EULA)** and select *"I accept the agreement"*.
+   - Click **Install** to unpack and register the application.
+   - Setup automatically generates a **Desktop Shortcut** and **Start Menu entry**.
+   - ThreatLense opens immediately as a **Dedicated Native Desktop Security Window** (like McAfee Antivirus / Windows Security) with **zero browser chrome, zero tabs, and no localhost address**.
+   - Audio cyber speech initialization greets you: *"Loading ThreatLense System"*.
 
 ---
 

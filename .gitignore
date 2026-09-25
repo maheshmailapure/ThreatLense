@@ -58,3 +58,6 @@ yarn-error.log*
 # Standalone Distributables (Upload to GitHub Releases)
 backend/dist/
 backend/build/
+installer/dist/
+installer/build/
+installer/payload.zip
