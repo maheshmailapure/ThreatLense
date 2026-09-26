@@ -6,6 +6,8 @@ and renders the dedicated ThreatLense desktop security console window (like McAf
 import os
 import sys
 import time
+import shutil
+import socket
 import threading
 import subprocess
 import urllib.request
@@ -20,14 +22,18 @@ if BASE_DIR not in sys.path:
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
 
-# Configure WebView2 profile directory to prevent E_ABORT / permission issues
 APP_DATA_DIR = os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~")), "ThreatLense")
-PROFILE_DIR = os.path.join(APP_DATA_DIR, "WebViewProfile")
-os.makedirs(PROFILE_DIR, exist_ok=True)
-os.environ["WEBVIEW2_USER_DATA_FOLDER"] = PROFILE_DIR
+os.makedirs(APP_DATA_DIR, exist_ok=True)
+LOG_FILE = os.path.join(APP_DATA_DIR, "threatlense_runtime.log")
+
+def log_debug(msg):
+    try:
+        with open(LOG_FILE, 'a', encoding='utf-8') as f:
+            f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n")
+    except Exception:
+        pass
 
 # Redirect stdout/stderr if running in windowed/noconsole mode
-LOG_FILE = os.path.join(APP_DATA_DIR, "threatlense_runtime.log")
 try:
     log_fp = open(LOG_FILE, 'a', encoding='utf-8', buffering=1)
     if sys.stdout is None:
@@ -40,13 +46,6 @@ except Exception:
     if sys.stderr is None:
         sys.stderr = open(os.devnull, 'w')
 
-def log_debug(msg):
-    try:
-        with open(LOG_FILE, 'a', encoding='utf-8') as f:
-            f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n")
-    except Exception:
-        pass
-
 def global_excepthook(exc_type, exc_value, exc_tb):
     import traceback
     err = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
@@ -58,6 +57,65 @@ def global_excepthook(exc_type, exc_value, exc_tb):
         pass
 
 sys.excepthook = global_excepthook
+
+def ensure_single_instance():
+    """Guarantee only one instance runs. Bring existing window to front on double-click."""
+    try:
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        user32 = ctypes.windll.user32
+        mutex = kernel32.CreateMutexW(None, False, "ThreatLense_App_Single_Instance_v1")
+        if kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
+            log_debug("Instance already running. Activating existing window...")
+            hwnd = user32.FindWindowW(None, "ThreatLense - Autonomous AI Cybersecurity Defense System")
+            if hwnd:
+                user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+                user32.SetForegroundWindow(hwnd)
+            sys.exit(0)
+        return mutex
+    except Exception as e:
+        log_debug(f"Single instance check notice: {e}")
+        return None
+
+def get_clean_webview_profile():
+    """
+    Generate an isolated, PID-unique profile folder.
+    Guarantees 0x800700AA (resource in use) errors can NEVER occur.
+    """
+    base_wv = os.path.join(APP_DATA_DIR, "WebViewProfiles")
+    os.makedirs(base_wv, exist_ok=True)
+
+    # Clean up stale session directories from dead processes
+    try:
+        for item in os.listdir(base_wv):
+            if item.startswith("Session_"):
+                folder = os.path.join(base_wv, item)
+                try:
+                    shutil.rmtree(folder, ignore_errors=True)
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
+    session_profile = os.path.join(base_wv, f"Session_{os.getpid()}")
+    os.makedirs(session_profile, exist_ok=True)
+    os.environ["WEBVIEW2_USER_DATA_FOLDER"] = session_profile
+    return session_profile
+
+def find_free_port(preferred=8000):
+    """Find an available port. Uses 8000 if open, or an ephemeral port if occupied."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('127.0.0.1', preferred))
+            return preferred
+    except OSError:
+        pass
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('127.0.0.1', 0))
+            return s.getsockname()[1]
+    except Exception:
+        return preferred
 
 def get_app_icon():
     """Locate ThreatLense shield icon for the native window frame."""
@@ -76,17 +134,14 @@ def get_app_icon():
     return None
 
 def find_app_browser():
-    """Find a native Chromium/Edge executable to host dedicated standalone window fallback."""
+    """Find a native Chromium/Edge executable for standalone app window fallback."""
     candidates = [
-        # Microsoft Edge (Built into 100% of Windows 10 & 11)
         os.path.expandvars(r"%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"),
         os.path.expandvars(r"%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"),
         os.path.expandvars(r"%LocalAppData%\Microsoft\Edge\Application\msedge.exe"),
-        # Google Chrome
         os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
         os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
         os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
-        # Brave Browser
         os.path.expandvars(r"%ProgramFiles%\BraveSoftware\Brave-Browser\Application\brave.exe"),
         os.path.expandvars(r"%LocalAppData%\BraveSoftware\Brave-Browser\Application\brave.exe"),
     ]
@@ -95,15 +150,15 @@ def find_app_browser():
             return c
     return None
 
-def start_backend():
+def start_backend(port):
     """Runs FastAPI backend engine in a dedicated background daemon thread."""
     try:
-        log_debug("Starting FastAPI backend engine on 127.0.0.1:8000...")
+        log_debug(f"Starting FastAPI backend engine on 127.0.0.1:{port}...")
         from app.main import app
         uvicorn.run(
             app,
             host="127.0.0.1",
-            port=8000,
+            port=port,
             log_level="warning",
             access_log=False
         )
@@ -111,21 +166,40 @@ def start_backend():
         import traceback
         log_debug(f"FastAPI backend exception: {e}\n{traceback.format_exc()}")
 
-def wait_for_server(url="http://127.0.0.1:8000/api/health", timeout=15):
+def wait_for_server(port, timeout=20):
     """Wait until backend server is initialized and responding."""
+    url = f"http://127.0.0.1:{port}/api/health"
     start = time.time()
     while time.time() - start < timeout:
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "ThreatLense-Desktop"})
             with urllib.request.urlopen(req, timeout=1.0) as resp:
                 if resp.status == 200:
+                    log_debug(f"Backend server is healthy and responding on port {port}.")
                     return True
         except Exception:
             pass
         time.sleep(0.2)
+    log_debug(f"Warning: Backend server did not respond within {timeout}s.")
     return False
 
-def run_native_app_window(url="http://127.0.0.1:8000"):
+def cleanup_session_processes(profile_dir):
+    """Terminate lingering msedgewebview2 processes belonging to this session."""
+    try:
+        import psutil
+        for proc in psutil.process_iter(['name', 'cmdline']):
+            try:
+                name = (proc.info.get('name') or '').lower()
+                if 'webview2' in name:
+                    cmdline = " ".join(proc.info.get('cmdline') or []).lower()
+                    if profile_dir.lower() in cmdline:
+                        proc.kill()
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+def run_native_app_window(url, profile_dir):
     """
     Renders the dedicated native Windows desktop security suite window.
     NEVER opens a web browser tab or browser URL bar.
@@ -135,7 +209,7 @@ def run_native_app_window(url="http://127.0.0.1:8000"):
 
     # 1. Primary Engine: PyWebView Native Win32 / EdgeChromium Window
     try:
-        log_debug(f"Attempting PyWebView native window on {url} (icon: {icon_path})...")
+        log_debug(f"Opening PyWebView native window for {url} (profile: {profile_dir})...")
         import webview
         window = webview.create_window(
             title="ThreatLense - Autonomous AI Cybersecurity Defense System",
@@ -148,12 +222,11 @@ def run_native_app_window(url="http://127.0.0.1:8000"):
             text_select=True,
             confirm_close=False,
         )
-        log_debug("PyWebView window created successfully, invoking webview.start()...")
         webview.start(
             gui="edgechromium",
             debug=False,
             private_mode=False,
-            storage_path=PROFILE_DIR,
+            storage_path=profile_dir,
             icon=icon_path
         )
         log_debug("PyWebView window closed cleanly by user.")
@@ -166,6 +239,7 @@ def run_native_app_window(url="http://127.0.0.1:8000"):
     browser_exe = find_app_browser()
     if browser_exe:
         try:
+            log_debug(f"Launching standalone app mode fallback with {browser_exe}...")
             app_profile = os.path.join(APP_DATA_DIR, "AppBrowserProfile")
             os.makedirs(app_profile, exist_ok=True)
             cmd = [
@@ -191,10 +265,9 @@ def run_native_app_window(url="http://127.0.0.1:8000"):
                 proc.wait()
             return
         except Exception as e:
-            print(f"[-] Standalone app mode error: {e}", file=sys.stderr)
+            log_debug(f"Standalone app mode error: {e}")
 
     # 3. Native system error dialog if neither native window engine initialized
-    # Never open regular web browser tabs
     try:
         import ctypes
         ctypes.windll.user32.MessageBoxW(
@@ -208,24 +281,33 @@ def run_native_app_window(url="http://127.0.0.1:8000"):
         pass
 
 def main():
-    print("=" * 65)
-    print("       THREATLENSE - NATIVE ENDPOINT SECURITY SYSTEM")
-    print("=" * 65)
-    print("[+] Starting Autonomous Threat Sentinels & Telemetry Engine...")
-    print("[+] Initializing Native Desktop Security Console Window...")
-    print("=" * 65)
+    log_debug("=" * 65)
+    log_debug("       THREATLENSE - NATIVE ENDPOINT SECURITY SYSTEM")
+    log_debug("=" * 65)
 
-    # 1. Start backend server in background thread
-    server_thread = threading.Thread(target=start_backend, daemon=True)
+    # 1. Single Instance Protection (Focus existing if already running)
+    _mutex = ensure_single_instance()
+
+    # 2. Configure clean, collision-free WebView2 profile
+    profile_dir = get_clean_webview_profile()
+
+    # 3. Select open port (8000 or next available)
+    port = find_free_port(8000)
+    log_debug(f"[+] Selected network port: {port}")
+
+    # 4. Start backend server in daemon thread
+    server_thread = threading.Thread(target=start_backend, args=(port,), daemon=True)
     server_thread.start()
 
-    # 2. Wait for backend to be ready
-    wait_for_server()
+    # 5. Wait for backend to be ready
+    wait_for_server(port)
 
-    # 3. Launch Native Window (Zero browser chrome, McAfee-style app window)
-    run_native_app_window("http://127.0.0.1:8000")
+    # 6. Launch Native Security Console Window
+    url = f"http://127.0.0.1:{port}"
+    run_native_app_window(url, profile_dir)
 
-    # 4. Clean exit when window closes
+    # 7. Cleanup session processes and clean exit
+    cleanup_session_processes(profile_dir)
     sys.exit(0)
 
 if __name__ == "__main__":
