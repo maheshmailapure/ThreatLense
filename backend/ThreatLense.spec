@@ -1,12 +1,19 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_all
+
+datas = [('C:/Users/shivl/Documents/Antigravity Projects/frontend/dist', 'frontend_dist'), ('C:/Users/shivl/Documents/Antigravity Projects/backend/threatlense.ico', '.')]
+binaries = []
+hiddenimports = ['uvicorn.logging', 'uvicorn.loops', 'uvicorn.loops.auto', 'uvicorn.protocols', 'uvicorn.protocols.http', 'uvicorn.protocols.http.auto', 'uvicorn.protocols.websockets', 'uvicorn.protocols.websockets.auto', 'uvicorn.lifespan', 'uvicorn.lifespan.on', 'engineio.async_drivers.asgi', 'sklearn', 'psutil', 'dotenv']
+tmp_ret = collect_all('webview')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
     ['desktop_launcher.py'],
     pathex=[],
-    binaries=[],
-    datas=[('C:/Users/shivl/Documents/Antigravity Projects/frontend/dist', 'frontend_dist')],
-    hiddenimports=['webview', 'uvicorn.logging', 'uvicorn.loops', 'uvicorn.loops.auto', 'uvicorn.protocols', 'uvicorn.protocols.http', 'uvicorn.protocols.http.auto', 'uvicorn.protocols.websockets', 'uvicorn.protocols.websockets.auto', 'uvicorn.lifespan', 'uvicorn.lifespan.on', 'engineio.async_drivers.asgi', 'sklearn', 'psutil', 'dotenv'],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -32,7 +39,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['threatlense.ico'],
+    icon=['C:/Users/shivl/Documents/Antigravity Projects/backend/threatlense.ico'],
 )
 coll = COLLECT(
     exe,

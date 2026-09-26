@@ -20,14 +20,36 @@ if BASE_DIR not in sys.path:
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
 
+# Configure WebView2 profile directory to prevent E_ABORT / permission issues
+APP_DATA_DIR = os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~")), "ThreatLense")
+PROFILE_DIR = os.path.join(APP_DATA_DIR, "WebViewProfile")
+os.makedirs(PROFILE_DIR, exist_ok=True)
+os.environ["WEBVIEW2_USER_DATA_FOLDER"] = PROFILE_DIR
+
 # Redirect stdout/stderr if running in windowed/noconsole mode
 if sys.stdout is None:
     sys.stdout = open(os.devnull, 'w')
 if sys.stderr is None:
     sys.stderr = open(os.devnull, 'w')
 
+def get_app_icon():
+    """Locate ThreatLense shield icon for the native window frame."""
+    candidates = []
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        candidates.append(os.path.join(sys._MEIPASS, "threatlense.ico"))
+    candidates.extend([
+        os.path.join(BASE_DIR, "threatlense.ico"),
+        os.path.join(os.path.dirname(sys.executable), "threatlense.ico"),
+        os.path.join(APP_DATA_DIR, "ThreatLense", "threatlense.ico"),
+        os.path.join(APP_DATA_DIR, "threatlense.ico"),
+    ])
+    for c in candidates:
+        if os.path.exists(c):
+            return os.path.abspath(c)
+    return None
+
 def find_app_browser():
-    """Find a native Chromium/Edge executable to host the dedicated application frame."""
+    """Find a native Chromium/Edge executable to host dedicated standalone window fallback."""
     candidates = [
         # Microsoft Edge (Built into 100% of Windows 10 & 11)
         os.path.expandvars(r"%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"),
@@ -73,21 +95,49 @@ def wait_for_server(url="http://127.0.0.1:8000/api/health", timeout=15):
 
 def run_native_app_window(url="http://127.0.0.1:8000"):
     """
-    Launches a dedicated native desktop window.
-    No browser URL bar, no search bar, no tabs, no 'localhost' text visible.
-    Behaves 100% like native Windows system security software (McAfee, Windows Defender).
+    Renders the dedicated native Windows desktop security suite window.
+    NEVER opens a web browser tab or browser URL bar.
+    Operates 100% like native Windows system security software (McAfee, Windows Defender).
     """
-    # 1. Native Application Mode Window via Edge/Chrome (zero external DLL requirements)
+    icon_path = get_app_icon()
+
+    # 1. Primary Engine: PyWebView Native Win32 / EdgeChromium Window
+    try:
+        import webview
+        window = webview.create_window(
+            title="ThreatLense - Autonomous AI Cybersecurity Defense System",
+            url=url,
+            width=1440,
+            height=900,
+            min_size=(1024, 680),
+            background_color="#0a0f1d",
+            resizable=True,
+            text_select=True,
+            confirm_close=False,
+        )
+        # webview.start blocks until the window is closed by the user
+        webview.start(
+            gui="edgechromium",
+            debug=False,
+            private_mode=False,
+            storage_path=PROFILE_DIR,
+            icon=icon_path
+        )
+        return
+    except Exception as e:
+        print(f"[-] PyWebView native window error: {e}", file=sys.stderr)
+
+    # 2. Secondary Engine: Standalone Frameless Chromium App Mode (Edge / Chrome)
     browser_exe = find_app_browser()
     if browser_exe:
         try:
-            profile_dir = os.path.join(os.path.expanduser("~"), ".threatlense_app_profile")
-            os.makedirs(profile_dir, exist_ok=True)
+            app_profile = os.path.join(APP_DATA_DIR, "AppBrowserProfile")
+            os.makedirs(app_profile, exist_ok=True)
             cmd = [
                 browser_exe,
                 f"--app={url}",
-                "--window-size=1400,900",
-                f"--user-data-dir={profile_dir}",
+                "--window-size=1440,900",
+                f"--user-data-dir={app_profile}",
                 "--no-first-run",
                 "--no-default-browser-check",
                 "--disable-extensions",
@@ -97,35 +147,29 @@ def run_native_app_window(url="http://127.0.0.1:8000"):
                 "--app-name=ThreatLense",
             ]
             proc = subprocess.Popen(cmd)
-            proc.wait()
+            time.sleep(2)
+            lock_file = os.path.join(app_profile, "lockfile")
+            if os.path.exists(lock_file):
+                while os.path.exists(lock_file):
+                    time.sleep(1)
+            else:
+                proc.wait()
             return
         except Exception as e:
-            print(f"[-] Native app window error: {e}")
+            print(f"[-] Standalone app mode error: {e}", file=sys.stderr)
 
-    # 2. PyWebView Engine Fallback
+    # 3. Native system error dialog if neither native window engine initialized
+    # Never open regular web browser tabs
     try:
-        import webview
-        window = webview.create_window(
-            title="ThreatLense - Autonomous AI Cybersecurity Defense System",
-            url=url,
-            width=1400,
-            height=900,
-            min_size=(1024, 680),
-            background_color="#eaf1ed",
-            resizable=True,
+        import ctypes
+        ctypes.windll.user32.MessageBoxW(
+            0,
+            "ThreatLense could not initialize the desktop security window.\n"
+            "Please ensure Microsoft Edge or WebView2 Runtime is installed on Windows.",
+            "ThreatLense - System Defense Alert",
+            0x10
         )
-        webview.start()
-        return
-    except Exception as e:
-        print(f"[-] PyWebView fallback error: {e}")
-
-    # 3. Fail-safe browser fallback
-    import webbrowser
-    webbrowser.open(url)
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
+    except Exception:
         pass
 
 def main():

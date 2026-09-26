@@ -11,6 +11,7 @@ def build():
     backend_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.abspath(os.path.join(backend_dir, ".."))
     frontend_dist = os.path.join(project_root, "frontend", "dist")
+    ico_path = os.path.join(backend_dir, "threatlense.ico")
 
     if not os.path.exists(frontend_dist):
         print(f"[-] Error: Frontend dist directory not found at {frontend_dist}")
@@ -27,9 +28,10 @@ def build():
         "--onedir",
         "--noconsole",
         "--name", "ThreatLense",
-        "--icon=threatlense.ico",
+        f"--icon={ico_path}",
         f"--add-data={frontend_dist};frontend_dist",
-        "--hidden-import=webview",
+        f"--add-data={ico_path};.",
+        "--collect-all=webview",
         "--hidden-import=uvicorn.logging",
         "--hidden-import=uvicorn.loops",
         "--hidden-import=uvicorn.loops.auto",
