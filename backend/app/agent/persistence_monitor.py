@@ -1,21 +1,29 @@
 import os
+import time
 import psutil
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 class PersistenceMonitor:
     """
     Monitors Windows persistence mechanisms: Startup folder, active/stopped Windows Services,
-    and checks for unauthorized persistence items.
+    and checks for unauthorized persistence items with 15-second TTL caching.
     """
     def __init__(self):
         self.startup_dir = os.path.join(
             os.getenv('APPDATA', ''),
             r'Microsoft\Windows\Start Menu\Programs\Startup'
         )
+        self._cached_result: Optional[Dict[str, Any]] = None
+        self.last_scan_time = 0.0
+        self.cache_ttl = 15.0
 
-    def collect(self) -> Dict[str, Any]:
+    def collect(self, force_refresh: bool = False) -> Dict[str, Any]:
         """Inspect startup folder files and active Windows system services."""
+        now = time.time()
+        if not force_refresh and self._cached_result and (now - self.last_scan_time < self.cache_ttl):
+            return self._cached_result
+
         startup_items: List[Dict[str, Any]] = []
 
         # 1. Startup folder check
@@ -48,7 +56,6 @@ class PersistenceMonitor:
                         else:
                             stopped_services_count += 1
 
-                        # Keep top 30 services for UI inspection
                         if len(services) < 30:
                             services.append({
                                 "name": sinfo.get("name"),
@@ -62,13 +69,15 @@ class PersistenceMonitor:
             except Exception:
                 pass
 
-        return {
+        self.last_scan_time = now
+        result = {
             "status": "ACTIVE",
             "timestamp": datetime.utcnow().isoformat(),
             "startup_folder_items_count": len(startup_items),
             "startup_items": startup_items,
-            "total_services_tracked": running_services_count + stopped_services_count,
             "running_services_count": running_services_count,
             "stopped_services_count": stopped_services_count,
-            "services_sample": services
+            "inspected_services": services
         }
+        self._cached_result = result
+        return result

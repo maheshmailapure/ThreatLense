@@ -40,13 +40,13 @@ function AnimatedLayout({ activeAlarm, onDismissAlarm }) {
         <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-transparent">
           <Navbar />
           <main className="flex-1 min-h-0 p-5 lg:p-6 overflow-y-auto scroll-smooth bg-transparent">
-            <AnimatePresence mode="wait">
+            <AnimatePresence initial={false}>
               <motion.div
                 key={location.pathname}
-                initial={{ opacity: 0, y: 8, filter: 'blur(4px)' }}
-                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
-                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.12 }}
                 className="w-full"
               >
                 <Outlet />

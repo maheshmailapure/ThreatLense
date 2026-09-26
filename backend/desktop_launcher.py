@@ -57,7 +57,7 @@ def start_backend():
         access_log=False
     )
 
-def wait_for_server(url="http://127.0.0.1:8000/api/dashboard/stats", timeout=15):
+def wait_for_server(url="http://127.0.0.1:8000/api/health", timeout=15):
     """Wait until backend server is initialized and responding."""
     start = time.time()
     while time.time() - start < timeout:

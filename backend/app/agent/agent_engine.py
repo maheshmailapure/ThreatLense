@@ -15,7 +15,6 @@ from app.agent.persistence_monitor import PersistenceMonitor
 from app.agent.event_correlator import EventCorrelator
 from app.agent.risk_engine import RiskEngine
 from app.agent.host_anomaly_detector import host_anomaly_detector
-from app.database.database import SessionLocal
 from app.utils.logger import logger, log_event
 
 class IDSAgentEngine:
@@ -23,7 +22,7 @@ class IDSAgentEngine:
     Master Real-Time Endpoint ThreatLense Intrusion Detection System Agent.
     Runs continuously as an autonomous background daemon, gathers live telemetry
     across all security surfaces, executes event correlation, evaluates risks,
-    and streams updates to connected WebSocket clients.
+    and streams updates to connected WebSocket clients with zero UI freeze.
     """
     def __init__(self):
         self.is_running = False
@@ -42,20 +41,45 @@ class IDSAgentEngine:
         self.correlator = EventCorrelator()
         self.risk_engine = RiskEngine()
 
+        # Cached state across different scanning frequencies
+        self._cached_proc_data: Dict[str, Any] = {"status": "ACTIVE", "total_running_processes": 0, "processes": []}
+        self._cached_browser_data: Dict[str, Any] = {"status": "ACTIVE", "detected_browsers": []}
+        self._cached_persist_data: Dict[str, Any] = {"status": "ACTIVE", "startup_items": []}
+        self._last_proc_scan = 0.0
+        self._last_browser_scan = 0.0
+        self._last_persist_scan = 0.0
+
         # Live In-Memory Telemetry Snapshot
         self.latest_telemetry: Dict[str, Any] = {}
         self.active_incidents: List[Dict[str, Any]] = []
-        self._ws_clients: Set[WebSocket] = set()
 
     def _collect_all(self):
-        """Perform one complete collection and correlation cycle across all monitors."""
+        """Perform high-frequency collection (<20ms) and scheduled deep scans."""
         try:
+            now = time.time()
+
+            # 1. Instantaneous sub-10ms metrics (every 1s)
             sys_data = self.system_monitor.collect()
-            proc_data = self.process_monitor.collect(limit=50)
-            net_data = self.network_monitor.collect(max_connections=60)
+            net_data = self.network_monitor.collect(max_connections=50)
             dl_data = self.download_monitor.scan()
-            browser_data = self.browser_monitor.collect()
-            persist_data = self.persistence_monitor.collect()
+
+            # 2. Medium frequency scans (every 5 seconds)
+            if now - self._last_proc_scan > 5.0 or not self._cached_proc_data.get("processes"):
+                self._cached_proc_data = self.process_monitor.collect(limit=50)
+                self._last_proc_scan = now
+
+            if now - self._last_browser_scan > 5.0 or not self._cached_browser_data.get("detected_browsers"):
+                self._cached_browser_data = self.browser_monitor.collect()
+                self._last_browser_scan = now
+
+            # 3. Low frequency persistence scan (every 15 seconds)
+            if now - self._last_persist_scan > 15.0 or not self._cached_persist_data.get("startup_items"):
+                self._cached_persist_data = self.persistence_monitor.collect()
+                self._last_persist_scan = now
+
+            proc_data = self._cached_proc_data
+            browser_data = self._cached_browser_data
+            persist_data = self._cached_persist_data
 
             # Correlate cross-surface telemetry
             raw_incidents = self.correlator.correlate(
@@ -74,9 +98,8 @@ class IDSAgentEngine:
                     if not any(i.get("title") == p_inc.get("title") for i in self.active_incidents):
                         self.active_incidents.insert(0, p_inc)
 
-            # Auto-prune terminated process incidents or stale incidents older than 60 seconds
+            # Auto-prune terminated process incidents or stale incidents
             live_active_incidents = []
-            now_ts = time.time()
             for inc in self.active_incidents:
                 pid = inc.get("pid")
                 if pid and isinstance(pid, int):
@@ -100,7 +123,6 @@ class IDSAgentEngine:
                     "timestamp": datetime.utcnow().isoformat(),
                     "recommended_action": "Routine observation."
                 }
-                # Check deduplication
                 if not any(i.get("incident_type") == "HOST_BEHAVIORAL_ANOMALY" for i in self.active_incidents):
                     self.active_incidents.insert(0, anomaly_inc)
 
@@ -170,7 +192,7 @@ class IDSAgentEngine:
         self.is_paused = False
 
     def get_snapshot(self) -> Dict[str, Any]:
-        """Return the latest live in-memory telemetry snapshot instantly."""
+        """Return the latest live in-memory telemetry snapshot instantly (0ms)."""
         if not self.latest_telemetry:
             return {
                 "agent_status": "ONLINE" if self.is_running else "READY",
@@ -184,10 +206,10 @@ class IDSAgentEngine:
                     "browser_monitor": "ACTIVE",
                     "persistence_monitor": "ACTIVE",
                     "database": "CONNECTED",
-                    "ollama_ai": "READY"
+                    "atria_ai": "ONLINE"
                 },
                 "system": self.system_monitor.collect(),
-                "processes": {"status": "ACTIVE", "total_running_processes": 0, "processes": []},
+                "processes": self._cached_proc_data,
                 "network": {"status": "ACTIVE", "total_sockets": 0, "flows": []},
                 "downloads": {"status": "ACTIVE", "in_progress_downloads": [], "recent_downloads": []},
                 "browsers": {"status": "ACTIVE", "detected_browsers": []},

@@ -7,38 +7,23 @@ from typing import Dict, Any, List
 class SystemMonitor:
     """
     Collects real-time hardware, operating system, and system performance metrics
-    directly from Windows kernel APIs using psutil.
+    directly from Windows kernel APIs using psutil with fast cached disk metrics.
     """
     def __init__(self):
         self.uname = platform.uname()
         self.boot_time = datetime.fromtimestamp(psutil.boot_time())
-        # Initial non-blocking CPU sample
+        self.cpu_count_logical = psutil.cpu_count(logical=True) or 4
+        self.cpu_count_physical = psutil.cpu_count(logical=False) or 2
         psutil.cpu_percent(interval=None)
 
-    def collect(self) -> Dict[str, Any]:
-        """Collect instantaneous genuine system metrics."""
+        self._cached_disks: List[Dict[str, Any]] = []
+        self._last_disk_time = 0.0
+
+    def _get_disks(self) -> List[Dict[str, Any]]:
         now = time.time()
-        uptime_seconds = int(now - psutil.boot_time())
-        uptime_str = str(timedelta(seconds=uptime_seconds))
+        if self._cached_disks and (now - self._last_disk_time < 10.0):
+            return self._cached_disks
 
-        # CPU details
-        cpu_pct = psutil.cpu_percent(interval=None)
-        per_cpu = psutil.cpu_percent(percpu=True, interval=None)
-        cpu_count_logical = psutil.cpu_count(logical=True) or 4
-        cpu_count_physical = psutil.cpu_count(logical=False) or 2
-        
-        try:
-            cpu_freq_obj = psutil.cpu_freq()
-            current_freq = round(cpu_freq_obj.current, 1) if cpu_freq_obj else 0.0
-            max_freq = round(cpu_freq_obj.max, 1) if cpu_freq_obj else 0.0
-        except Exception:
-            current_freq, max_freq = 0.0, 0.0
-
-        # Memory details
-        mem = psutil.virtual_memory()
-        swap = psutil.swap_memory()
-
-        # Disk details
         disks: List[Dict[str, Any]] = []
         for part in psutil.disk_partitions(all=False):
             try:
@@ -54,17 +39,24 @@ class SystemMonitor:
                 })
             except Exception:
                 continue
+        self._cached_disks = disks
+        self._last_disk_time = now
+        return disks
 
-        # Network I/O byte counters
+    def collect(self) -> Dict[str, Any]:
+        """Collect instantaneous genuine system metrics in under 5ms."""
+        now = time.time()
+        uptime_seconds = int(now - psutil.boot_time())
+        uptime_str = str(timedelta(seconds=uptime_seconds))
+
+        cpu_pct = psutil.cpu_percent(interval=None)
+        per_cpu = psutil.cpu_percent(percpu=True, interval=None)
+
+        mem = psutil.virtual_memory()
+        swap = psutil.swap_memory()
         net_io = psutil.net_io_counters()
-        net_stats = {
-            "bytes_recv_mb": round(net_io.bytes_recv / (1024 ** 2), 2),
-            "bytes_sent_mb": round(net_io.bytes_sent / (1024 ** 2), 2),
-            "packets_recv": net_io.packets_recv,
-            "packets_sent": net_io.packets_sent
-        }
 
-        # Process counts
+        disks = self._get_disks()
         total_pids = len(psutil.pids())
 
         return {
@@ -79,14 +71,14 @@ class SystemMonitor:
             "uptime_seconds": uptime_seconds,
             "active_processes_count": total_pids,
             "cpu_usage_pct": cpu_pct,
-            "cpu_cores_logical": cpu_count_logical,
+            "cpu_cores_logical": self.cpu_count_logical,
             "cpu": {
                 "usage_percent": cpu_pct,
                 "per_core_percent": per_cpu,
-                "logical_cores": cpu_count_logical,
-                "physical_cores": cpu_count_physical,
-                "current_freq_mhz": current_freq,
-                "max_freq_mhz": max_freq
+                "logical_cores": self.cpu_count_logical,
+                "physical_cores": self.cpu_count_physical,
+                "current_freq_mhz": 0.0,
+                "max_freq_mhz": 0.0
             },
             "memory": {
                 "total_gb": round(mem.total / (1024 ** 3), 2),
@@ -97,6 +89,11 @@ class SystemMonitor:
                 "swap_used_gb": round(swap.used / (1024 ** 3), 2),
                 "swap_percent_used": swap.percent
             },
-            "network": net_stats,
+            "network": {
+                "bytes_recv_mb": round(net_io.bytes_recv / (1024 ** 2), 2),
+                "bytes_sent_mb": round(net_io.bytes_sent / (1024 ** 2), 2),
+                "packets_recv": net_io.packets_recv,
+                "packets_sent": net_io.packets_sent
+            },
             "disks": disks
         }

@@ -99,7 +99,8 @@ export default function Dashboard({ onTriggerAlarm }) {
     fetchData();
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//127.0.0.1:8000/api/ws/agent`;
+    const host = window.location.port === '5173' ? '127.0.0.1:8000' : (window.location.host || '127.0.0.1:8000');
+    const wsUrl = `${protocol}//${host}/api/ws/agent`;
     
     try {
       const ws = new WebSocket(wsUrl);
@@ -190,7 +191,7 @@ export default function Dashboard({ onTriggerAlarm }) {
     });
 
     let interval;
-    if (autoRefresh) interval = setInterval(fetchData, 1000);
+    if (autoRefresh) interval = setInterval(fetchData, 3000);
 
     return () => {
       if (interval) clearInterval(interval);

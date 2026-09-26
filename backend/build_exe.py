@@ -52,6 +52,13 @@ def build():
     if res.returncode == 0:
         exe_path = os.path.join(backend_dir, "dist", "ThreatLense", "ThreatLense.exe")
         print(f"[+] Build succeeded! Executable generated at: {exe_path}")
+
+        # Automatically package zip archive for installer
+        zip_base = os.path.join(backend_dir, "dist", "ThreatLense-Windows")
+        src_dir = os.path.join(backend_dir, "dist", "ThreatLense")
+        print(f"[+] Compressing {src_dir} -> {zip_base}.zip...")
+        shutil.make_archive(zip_base, 'zip', src_dir)
+        print(f"[+] Archive ready: {zip_base}.zip ({os.path.getsize(zip_base + '.zip') / (1024*1024):.2f} MB)")
     else:
         print(f"[-] PyInstaller failed with code {res.returncode}")
         sys.exit(res.returncode)

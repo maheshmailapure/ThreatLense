@@ -79,7 +79,7 @@ class AtriaService:
                 "Authorization": f"Bearer {ATRIA_API_KEY}",
                 "Content-Type": "application/json"
             }
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with httpx.AsyncClient(timeout=3.0) as client:
                 res = await client.get(f"{ATRIA_BASE_URL}/models", headers=headers)
                 latency_ms = round((time.time() - start_t) * 1000, 1)
 

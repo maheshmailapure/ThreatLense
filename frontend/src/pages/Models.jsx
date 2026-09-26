@@ -15,18 +15,21 @@ import {
   Layers
 } from 'lucide-react';
 import { getAIDecisionStatus } from '../services/api';
+import { getCachedData, setCachedData, hasCachedData } from '../services/dataCache';
 
 export default function Models() {
   const navigate = useNavigate();
-  const [aiStatus, setAiStatus] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [aiStatus, setAiStatus] = useState(() => getCachedData('models_ai_status', null));
+  const [loading, setLoading] = useState(() => !hasCachedData('models_ai_status'));
   const [testing, setTesting] = useState(false);
 
   const fetchStatus = async () => {
-    setLoading(true);
     try {
       const data = await getAIDecisionStatus();
-      setAiStatus(data);
+      if (data) {
+        setAiStatus(data);
+        setCachedData('models_ai_status', data);
+      }
     } catch (err) {
       console.warn('Failed to fetch AI status:', err);
     } finally {

@@ -28,6 +28,7 @@ wheels/
 *.db
 *.sqlite3
 backend/logs/*.log
+logs/
 backend/uploads/*
 !backend/uploads/.gitkeep
 
