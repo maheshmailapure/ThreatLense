@@ -536,7 +536,10 @@ class ThreatLenseInstaller(tk.Tk):
                 target_exe = os.path.join(self.install_dir.get(), "ThreatLense.exe")
                 if os.path.exists(target_exe):
                     try:
-                        subprocess.Popen([target_exe], cwd=self.install_dir.get())
+                        if hasattr(os, 'startfile'):
+                            os.startfile(target_exe)
+                        else:
+                            subprocess.Popen([target_exe], cwd=self.install_dir.get(), creationflags=0x00000008)
                     except Exception as e:
                         messagebox.showwarning("Launch Warning", f"Could not launch ThreatLense: {e}")
             self.destroy()
@@ -564,6 +567,18 @@ class ThreatLenseInstaller(tk.Tk):
         dest = self.install_dir.get()
         os.makedirs(dest, exist_ok=True)
         
+        # Terminate any previously running ThreatLense instances to release file locks
+        try:
+            subprocess.run(
+                ["taskkill", "/f", "/im", "ThreatLense.exe"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=0x08000000
+            )
+            time.sleep(1.0)
+        except Exception:
+            pass
+
         # Locate payload archive
         bundle_dir = get_bundle_dir()
         payload_zip = os.path.join(bundle_dir, "payload.zip")
@@ -598,8 +613,18 @@ class ThreatLenseInstaller(tk.Tk):
                     target_file = os.path.join(dest, rel_path.replace('/', os.sep))
                     os.makedirs(os.path.dirname(target_file), exist_ok=True)
 
-                    with zf.open(item) as src, open(target_file, 'wb') as dst:
-                        dst.write(src.read())
+                    data = zf.read(item)
+                    written = False
+                    for attempt in range(4):
+                        try:
+                            with open(target_file, 'wb') as dst:
+                                dst.write(data)
+                            written = True
+                            break
+                        except (PermissionError, OSError):
+                            time.sleep(0.4)
+                    if not written:
+                        print(f"Warning: could not write {target_file}")
 
                     if idx % 10 == 0 or idx == total_files - 1:
                         self.progress_bar['value'] = idx + 1

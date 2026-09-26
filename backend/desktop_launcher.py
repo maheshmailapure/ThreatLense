@@ -27,10 +27,37 @@ os.makedirs(PROFILE_DIR, exist_ok=True)
 os.environ["WEBVIEW2_USER_DATA_FOLDER"] = PROFILE_DIR
 
 # Redirect stdout/stderr if running in windowed/noconsole mode
-if sys.stdout is None:
-    sys.stdout = open(os.devnull, 'w')
-if sys.stderr is None:
-    sys.stderr = open(os.devnull, 'w')
+LOG_FILE = os.path.join(APP_DATA_DIR, "threatlense_runtime.log")
+try:
+    log_fp = open(LOG_FILE, 'a', encoding='utf-8', buffering=1)
+    if sys.stdout is None:
+        sys.stdout = log_fp
+    if sys.stderr is None:
+        sys.stderr = log_fp
+except Exception:
+    if sys.stdout is None:
+        sys.stdout = open(os.devnull, 'w')
+    if sys.stderr is None:
+        sys.stderr = open(os.devnull, 'w')
+
+def log_debug(msg):
+    try:
+        with open(LOG_FILE, 'a', encoding='utf-8') as f:
+            f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n")
+    except Exception:
+        pass
+
+def global_excepthook(exc_type, exc_value, exc_tb):
+    import traceback
+    err = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
+    log_debug(f"UNCAUGHT FATAL EXCEPTION:\n{err}")
+    try:
+        import ctypes
+        ctypes.windll.user32.MessageBoxW(0, f"ThreatLense Fatal Error:\n{err[:400]}", "ThreatLense Alert", 0x10)
+    except Exception:
+        pass
+
+sys.excepthook = global_excepthook
 
 def get_app_icon():
     """Locate ThreatLense shield icon for the native window frame."""
@@ -70,14 +97,19 @@ def find_app_browser():
 
 def start_backend():
     """Runs FastAPI backend engine in a dedicated background daemon thread."""
-    from app.main import app
-    uvicorn.run(
-        app,
-        host="127.0.0.1",
-        port=8000,
-        log_level="warning",
-        access_log=False
-    )
+    try:
+        log_debug("Starting FastAPI backend engine on 127.0.0.1:8000...")
+        from app.main import app
+        uvicorn.run(
+            app,
+            host="127.0.0.1",
+            port=8000,
+            log_level="warning",
+            access_log=False
+        )
+    except Exception as e:
+        import traceback
+        log_debug(f"FastAPI backend exception: {e}\n{traceback.format_exc()}")
 
 def wait_for_server(url="http://127.0.0.1:8000/api/health", timeout=15):
     """Wait until backend server is initialized and responding."""
@@ -103,6 +135,7 @@ def run_native_app_window(url="http://127.0.0.1:8000"):
 
     # 1. Primary Engine: PyWebView Native Win32 / EdgeChromium Window
     try:
+        log_debug(f"Attempting PyWebView native window on {url} (icon: {icon_path})...")
         import webview
         window = webview.create_window(
             title="ThreatLense - Autonomous AI Cybersecurity Defense System",
@@ -115,7 +148,7 @@ def run_native_app_window(url="http://127.0.0.1:8000"):
             text_select=True,
             confirm_close=False,
         )
-        # webview.start blocks until the window is closed by the user
+        log_debug("PyWebView window created successfully, invoking webview.start()...")
         webview.start(
             gui="edgechromium",
             debug=False,
@@ -123,9 +156,11 @@ def run_native_app_window(url="http://127.0.0.1:8000"):
             storage_path=PROFILE_DIR,
             icon=icon_path
         )
+        log_debug("PyWebView window closed cleanly by user.")
         return
     except Exception as e:
-        print(f"[-] PyWebView native window error: {e}", file=sys.stderr)
+        import traceback
+        log_debug(f"PyWebView native window error: {e}\n{traceback.format_exc()}")
 
     # 2. Secondary Engine: Standalone Frameless Chromium App Mode (Edge / Chrome)
     browser_exe = find_app_browser()
