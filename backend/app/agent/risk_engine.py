@@ -94,12 +94,16 @@ class RiskEngine:
                     session.add(det)
                     session.flush()
 
+                    clean_category = inc.get("attack_category") or inc.get("incident_type") or "Security Event"
+                    if len(clean_category) > 50:
+                        clean_category = clean_category[:50]
+
                     alert = Alert(
                         detection_id=det.id,
-                        alert_type=(inc.get("title") or "Security Event")[:50],
+                        alert_type=clean_category,
                         risk_level=inc.get("severity", "MEDIUM"),
                         status="NEW",
-                        description=f"{inc.get('evidence', '')} | Action: {inc.get('recommended_action', '')}"
+                        description=f"{inc.get('title', '')} | {inc.get('evidence', '')} | Action: {inc.get('recommended_action', '')}"
                     )
                     session.add(alert)
                     session.commit()

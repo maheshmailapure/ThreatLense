@@ -149,22 +149,35 @@ class EventCorrelator:
                     "recommended_action": f"Block outbound traffic to {r_ip}:{r_port} and inspect {proc_name} binary."
                 })
 
-            # C. Inbound external attack detection (Someone attacking from the outside)
+            # Standard outbound client web/DNS/cloud traffic is NEVER an inbound attack
+            STANDARD_OUTBOUND_PORTS = {80, 443, 53, 123, 8080, 8443, 5228, 5222, 1935}
+            KNOWN_CLIENT_BROWSERS = {
+                "chrome.exe", "msedge.exe", "firefox.exe", "brave.exe", "opera.exe",
+                "spotify.exe", "discord.exe", "steam.exe", "battle.net.exe", "slack.exe", "teams.exe",
+                "code.exe", "git.exe", "python.exe", "pythonw.exe", "node.exe", "onedrive.exe"
+            }
+            if r_port in STANDARD_OUTBOUND_PORTS or (proc_name in KNOWN_CLIENT_BROWSERS and r_port > 0):
+                continue
+
+            # C. Inbound external attack detection (Strictly genuine incoming connections)
+            # Must NOT be loopback/local, must be an unsolicited external connection to a local listening port
             if r_type in ["EXTERNAL", "PRIVATE"] and r_ip not in ["127.0.0.1", "::1", "0.0.0.0", ""]:
-                # Inbound connection attempt to local machine
-                if direction in ["INBOUND", "LISTENING"] or l_port < 1024 or status in ["SYN_RECV", "ESTABLISHED"]:
+                # Only real incoming SYN handshakes or traffic explicitly addressed to listening service ports
+                is_real_inbound = (status == "SYN_RECV") or (direction == "INBOUND" and l_port < 10000 and r_port > 1024)
+
+                if is_real_inbound and l_port < 10000:
                     inbound_ports_by_ip.setdefault(r_ip, set()).add(l_port)
                     if status == "SYN_RECV":
                         syn_recv_by_ip[r_ip] = syn_recv_by_ip.get(r_ip, 0) + 1
 
-                    # C1. Direct exploit attack on sensitive local service ports
-                    if l_port in HIGH_RISK_INBOUND_PORTS and r_type == "EXTERNAL":
+                    # C1. Direct exploit attack on sensitive local service ports (e.g. SMB, RDP)
+                    if l_port in HIGH_RISK_INBOUND_PORTS and (status == "SYN_RECV" or direction == "INBOUND"):
                         detected_incidents.append({
                             "incident_type": "INBOUND_EXPLOIT_ATTEMPT",
                             "attack_category": "EXPLOIT / UNAUTHORIZED INGRESS",
                             "severity": "CRITICAL",
                             "confidence": 99.0,
-                            "title": f"Inbound Attack on {HIGH_RISK_INBOUND_PORTS[l_port]} Port {l_port} from {r_ip}",
+                            "title": f"Inbound Attack on {HIGH_RISK_INBOUND_PORTS[l_port]} (Port {l_port}) from {r_ip}",
                             "process": f.get("process_name", "System"),
                             "pid": f.get("pid"),
                             "source_ip": r_ip,
@@ -175,19 +188,20 @@ class EventCorrelator:
                             "recommended_action": f"Block IP {r_ip} in Windows Firewall immediately and close port {l_port}."
                         })
 
-        # D. Port Scanning / Host Reconnaissance (3+ distinct ports probed by external IP)
+        # D. Port Scanning / Host Reconnaissance (At least 5 distinct local listening service ports probed)
         for scan_ip, probed_ports in inbound_ports_by_ip.items():
-            if len(probed_ports) >= 3:
+            if len(probed_ports) >= 5:
+                ports_list = sorted(list(probed_ports))
                 detected_incidents.append({
                     "incident_type": "EXTERNAL_PORT_SCAN",
                     "attack_category": "RECONNAISSANCE / PORT SCAN",
                     "severity": "HIGH",
                     "confidence": 98.0,
-                    "title": f"External Port Reconnaissance Scan Detected from {scan_ip} ({len(probed_ports)} ports)",
+                    "title": f"External Port Reconnaissance Scan Detected from {scan_ip}",
                     "process": "Network Sentinel",
                     "source_ip": scan_ip,
-                    "target_port": list(probed_ports)[0],
-                    "evidence": f"Remote IP {scan_ip} actively probed multiple local service ports ({list(probed_ports)[:5]}).",
+                    "target_port": ports_list[0],
+                    "evidence": f"Remote IP {scan_ip} actively scanned multiple local service ports ({ports_list[:6]}).",
                     "timestamp": now_iso,
                     "recommended_action": f"Add persistent block rule for {scan_ip} in Windows Defender Firewall."
                 })
