@@ -33,6 +33,8 @@ export default function SystemNetworkTopology() {
   const [flowSearch, setFlowSearch] = useState('');
   const [flowFilter, setFlowFilter] = useState('ALL');
 
+  const isMountedRef = React.useRef(true);
+
   const fetchData = async () => {
     try {
       const [sys, ports, flows, ifaces] = await Promise.all([
@@ -41,6 +43,7 @@ export default function SystemNetworkTopology() {
         getLiveTrafficFlows(80).catch(err => { console.warn(err); return { flows: [] }; }),
         getNetworkInterfacesDetail().catch(err => { console.warn(err); return []; })
       ]);
+      if (!isMountedRef.current) return;
       if (sys) {
         setSystemOverview(sys);
         setCachedData('topology_sys', sys);
@@ -60,18 +63,24 @@ export default function SystemNetworkTopology() {
     } catch (err) {
       console.error('Failed to load topology data:', err);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   };
 
   useEffect(() => {
+    isMountedRef.current = true;
     fetchData();
     let iv;
     if (autoRefresh) {
-      iv = setInterval(fetchData, 1000);
+      iv = setInterval(fetchData, 3000);
     }
-    return () => { if (iv) clearInterval(iv); };
+    return () => {
+      isMountedRef.current = false;
+      if (iv) clearInterval(iv);
+    };
   }, [autoRefresh]);
 
   if (loading) return <LoadingSpinner message="Scanning host hardware, open sockets & network flows..." />;

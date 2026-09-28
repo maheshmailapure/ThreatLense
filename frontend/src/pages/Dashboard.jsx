@@ -63,6 +63,7 @@ export default function Dashboard({ onTriggerAlarm }) {
   const wsRef = useRef(null);
   const lastTriggeredIncidentRef = useRef(null);
   const scoreRef = useRef(null);
+  const isMountedRef = useRef(true);
 
   const fetchData = async () => {
     try {
@@ -72,6 +73,7 @@ export default function Dashboard({ onTriggerAlarm }) {
         getAlerts({ page: 1, page_size: 7 }).catch(() => ({ items: [] })),
         getSystemHardwareOverview().catch(() => null)
       ]);
+      if (!isMountedRef.current) return;
       if (statsData) { setStats(statsData); setCachedData('dashboard_stats', statsData); }
       if (chartsData) { setCharts(chartsData); setCachedData('dashboard_charts', chartsData); }
       if (alertsData && alertsData.items) { setAlerts(alertsData.items); setCachedData('dashboard_alerts', alertsData.items); }
@@ -79,8 +81,10 @@ export default function Dashboard({ onTriggerAlarm }) {
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   };
 
@@ -96,6 +100,7 @@ export default function Dashboard({ onTriggerAlarm }) {
   }, [agentSnapshot?.host_anomaly?.anomaly_score]);
 
   useEffect(() => {
+    isMountedRef.current = true;
     fetchData();
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -107,6 +112,7 @@ export default function Dashboard({ onTriggerAlarm }) {
       wsRef.current = ws;
 
       ws.onmessage = (event) => {
+        if (!isMountedRef.current) return;
         try {
           const snapshot = JSON.parse(event.data);
           setAgentSnapshot(snapshot);
@@ -194,10 +200,17 @@ export default function Dashboard({ onTriggerAlarm }) {
     if (autoRefresh) interval = setInterval(fetchData, 3000);
 
     return () => {
+      isMountedRef.current = false;
       if (interval) clearInterval(interval);
       if (unsub) unsub();
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.close();
+      if (wsRef.current) {
+        wsRef.current.onmessage = null;
+        wsRef.current.onerror = null;
+        wsRef.current.onclose = null;
+        try {
+          wsRef.current.close();
+        } catch (e) {}
+        wsRef.current = null;
       }
     };
   }, [autoRefresh]);

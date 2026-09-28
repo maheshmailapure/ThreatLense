@@ -21,6 +21,7 @@ export default function LiveMonitor({ onTriggerAlarm }) {
   const [actionFeedback, setActionFeedback] = useState('');
 
   const lastAlarmKeyRef = React.useRef(null);
+  const isMountedRef = React.useRef(true);
 
   const fetchData = async () => {
     try {
@@ -29,6 +30,7 @@ export default function LiveMonitor({ onTriggerAlarm }) {
         scanHostNetwork(50).catch(err => { console.warn(err); return null; }),
         getModels().catch(err => { console.warn(err); return []; })
       ]);
+      if (!isMountedRef.current) return;
       if (telemData) {
         setTelemetry(telemData);
         setCachedData('live_monitor_telemetry', telemData);
@@ -62,16 +64,22 @@ export default function LiveMonitor({ onTriggerAlarm }) {
     } catch (err) {
       console.error('Live monitor fetch failed:', err);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   };
 
   useEffect(() => {
+    isMountedRef.current = true;
     fetchData();
     let interval;
     if (autoRefresh) interval = setInterval(fetchData, 4000);
-    return () => { if (interval) clearInterval(interval); };
+    return () => {
+      isMountedRef.current = false;
+      if (interval) clearInterval(interval);
+    };
   }, [autoRefresh, selectedModel]);
 
   const handleStopPort = async (port, proto) => {

@@ -122,8 +122,13 @@ class DownloadMonitor:
                     entropy = self._calc_entropy(filepath)
                     file_info["entropy"] = entropy
                     
-                    # Risk evaluation: double extension or script/executable with high entropy
-                    is_suspicious = has_double_ext or (ext in SUSPICIOUS_EXTENSIONS and entropy > 7.3)
+                    # Risk evaluation: benign docs are never suspicious; scripts/executables evaluated
+                    BENIGN_DOCS = {".pdf", ".ppt", ".pptx", ".doc", ".docx", ".xls", ".xlsx", ".txt", ".csv", ".png", ".jpg", ".jpeg"}
+                    if ext in BENIGN_DOCS and not has_double_ext:
+                        is_suspicious = False
+                    else:
+                        is_suspicious = has_double_ext or (ext in SUSPICIOUS_EXTENSIONS and entropy > 7.3)
+
                     file_info["is_suspicious"] = is_suspicious
                     file_info["risk_level"] = "SUSPICIOUS" if is_suspicious else "LOW"
 

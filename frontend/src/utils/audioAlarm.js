@@ -3,7 +3,7 @@ let sirenOscillator1 = null;
 let sirenOscillator2 = null;
 let sirenGainNode = null;
 let isAlarmPlaying = false;
-let isMuted = localStorage.getItem('ai_ids_siren_muted') !== null ? localStorage.getItem('ai_ids_siren_muted') === 'true' : true;
+let isMuted = localStorage.getItem('ai_ids_siren_muted') !== null ? localStorage.getItem('ai_ids_siren_muted') === 'true' : false;
 
 function getAudioContext() {
   if (!audioCtx) {
@@ -16,6 +16,17 @@ function getAudioContext() {
     audioCtx.resume();
   }
   return audioCtx;
+}
+
+// Automatically unlock audio context on initial user interaction in the app
+if (typeof window !== 'undefined') {
+  const unlockAudio = () => {
+    getAudioContext();
+    window.removeEventListener('click', unlockAudio);
+    window.removeEventListener('keydown', unlockAudio);
+  };
+  window.addEventListener('click', unlockAudio);
+  window.addEventListener('keydown', unlockAudio);
 }
 
 export const playIntrusionAlarm = (severity = 'CRITICAL') => {

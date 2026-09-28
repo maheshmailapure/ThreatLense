@@ -153,7 +153,7 @@ Output your evaluation as JSON with exactly these keys:
                 "max_tokens": 1500
             }
 
-            async with httpx.AsyncClient(timeout=6.0) as client:
+            async with httpx.AsyncClient(timeout=2.5) as client:
                 res = await client.post(f"{ATRIA_BASE_URL}/chat/completions", headers=headers, json=payload)
                 if res.status_code == 200:
                     resp_json = res.json()
@@ -202,7 +202,7 @@ Output your evaluation as JSON with exactly these keys:
                 logger.warning(f"Atria AI API returned HTTP {res.status_code}: {res.text}")
         except Exception as err:
             import traceback
-            logger.error(f"Atria AI inference failure: {err}\n{traceback.format_exc()}")
+            logger.warning(f"Atria AI inference fast fallback: {err}")
 
         # Intelligent Fallback if API offline
         return cls._heuristic_fallback(telemetry)
@@ -249,7 +249,7 @@ Generate comprehensive triage instructions as a JSON object with:
                 ],
                 "temperature": 0.1
             }
-            async with httpx.AsyncClient(timeout=60.0) as client:
+            async with httpx.AsyncClient(timeout=2.5) as client:
                 res = await client.post(f"{ATRIA_BASE_URL}/chat/completions", headers=headers, json=payload)
                 if res.status_code == 200:
                     resp_json = res.json()
@@ -270,20 +270,40 @@ Generate comprehensive triage instructions as a JSON object with:
                         parsed = json.loads(content)
                         parsed["source"] = f"Atria AI ({ATRIA_MODEL})"
                         parsed["reasoning_content"] = reasoning
+                        parsed["source_ip"] = source_ip
+                        parsed["target_port"] = target_port
+                        parsed["risk_level"] = risk_level
+                        parsed["attack_type"] = attack_type
                         return parsed
         except Exception as e:
-            logger.error(f"Error triaging incident with Atria AI: {e}")
+            logger.info(f"Using autonomous triage engine (Atria API: {e})")
 
         # Fallback rule generation
+        mitre_map = {
+            "Meterpreter / C2 Reverse Shell": "T1059.001 - Command and Scripting Interpreter: PowerShell",
+            "Inbound Exploit Probe": "T1190 - Exploit Public-Facing Application",
+            "Credential Brute Force / Probe": "T1110 - Brute Force",
+            "Port Scan": "T1046 - Network Service Discovery",
+            "SYN Flood": "T1498 - Network Denial of Service",
+            "Malicious Payload": "T1204 - User Execution"
+        }
+        mitre_id = mitre_map.get(attack_type, "T1046 - Network Service Discovery")
+        threat_summary = incident_data.get("summary") or f"Detected anomalous {attack_type} activity originating from {source_ip} targeting port {target_port}."
+        root_cause = incident_data.get("root_cause") or f"Unsolicited connection or abnormal traffic pattern directed at service port {target_port}."
+
         return {
-            "threat_summary": f"Detected potential {attack_type} activity originating from {source_ip}.",
-            "root_cause_analysis": f"Unsolicited connection or abnormal traffic pattern directed at port {target_port}.",
-            "immediate_action": f"Quarantine source {source_ip} at network perimeter.",
+            "threat_summary": threat_summary,
+            "root_cause_analysis": root_cause,
+            "immediate_action": f"Quarantine source {source_ip} at network perimeter and terminate unauthorized connection.",
             "firewall_rule": f"netsh advfirewall firewall add rule name=\"Block_{source_ip}\" dir=in action=block remoteip={source_ip}",
             "linux_firewall_rule": f"iptables -I INPUT -s {source_ip} -j DROP",
-            "containment_strategy": "Review host process logs and verify endpoint integrity.",
-            "mitre_id": "T1046",
-            "source": "Atria AI Heuristic Core (Fallback)"
+            "containment_strategy": f"Isolate endpoint, drop ingress traffic on port {target_port}, and inspect process execution tree.",
+            "mitre_id": mitre_id,
+            "source_ip": source_ip,
+            "target_port": target_port,
+            "risk_level": risk_level,
+            "attack_type": attack_type,
+            "source": f"ThreatLense AI Core (Atria-Dawn Fallback)"
         }
 
     @classmethod
@@ -299,23 +319,49 @@ Generate comprehensive triage instructions as a JSON object with:
         # A. File Download Threat Evaluation
         if telemetry.get("event_type") == "SUSPICIOUS_FILE_DOWNLOAD":
             indicators = telemetry.get("heuristic_indicators", [])
-            ext = telemetry.get("file_extension", "")
+            ext = telemetry.get("file_extension", "").lower()
             fname = telemetry.get("filename", "")
             prelim = telemetry.get("preliminary_threat", "Malicious Payload")
             entropy = telemetry.get("entropy", 0.0)
 
-            is_dangerous = bool(indicators) or ext in [".exe", ".scr", ".vbs", ".bat", ".cmd", ".ps1"] or entropy > 7.5
-            if is_dangerous:
+            BENIGN_DOCS = {
+                ".pdf", ".ppt", ".pptx", ".doc", ".docx", ".xls", ".xlsx",
+                ".txt", ".csv", ".rtf", ".odt", ".ods", ".odp",
+                ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp",
+                ".mp3", ".wav", ".mp4", ".mkv", ".json", ".xml"
+            }
+            # Documents must NEVER trigger an attack verdict or siren unless disguised PE
+            if ext in BENIGN_DOCS and not any("Windows Executable" in ind or "Double extension" in ind for ind in indicators):
+                return {
+                    "is_intrusion": False,
+                    "verdict": "NORMAL",
+                    "attack_type": "Normal Document File",
+                    "category": "Normal",
+                    "threat_level": "LOW",
+                    "confidence_score": 0.99,
+                    "mitre_technique": "N/A",
+                    "summary": f"Document '{fname}' verified safe (standard user document container).",
+                    "root_cause": "Standard authorized host document download.",
+                    "firewall_rule": "None",
+                    "recommended_action": "No action required."
+                }
+
+            is_script_or_exe = ext in [".bat", ".cmd", ".ps1", ".vbs", ".exe", ".scr", ".hta", ".js", ".wsf", ".dll", ".pif"]
+            has_threat_indicators = bool(indicators) or any(
+                term in prelim.lower() for term in ["destructive", "dropper", "powershell", "certutil", "eicar", "deletion", "format", "fork bomb", "evasion", "trojan"]
+            )
+
+            if is_script_or_exe and (has_threat_indicators or (ext in [".exe", ".scr", ".pif"] and entropy > 7.4)):
                 return {
                     "is_intrusion": True,
                     "verdict": "ATTACK",
-                    "attack_type": f"Malicious Dropper: {prelim}",
+                    "attack_type": f"Malicious Script / Dropper: {prelim}",
                     "category": "R2L",
                     "threat_level": "CRITICAL",
-                    "confidence_score": 0.96,
-                    "mitre_technique": "T1204 - User Execution: Malicious File",
-                    "summary": f"Atria Engine flagged hazardous executable download '{fname}'. Indicators: {', '.join(indicators[:2]) if indicators else 'High Entropy Payload'}.",
-                    "root_cause": "Malware dropper or obfuscated script payload execution.",
+                    "confidence_score": 0.98,
+                    "mitre_technique": "T1059 - Command and Scripting Interpreter",
+                    "summary": f"Atria Engine intercepted dangerous executable or script '{fname}'. Indicators: {', '.join(indicators[:2]) if indicators else prelim}.",
+                    "root_cause": "Host file execution attempt with hostile payload.",
                     "firewall_rule": "None",
                     "recommended_action": f"Quarantine {fname} immediately in security vault."
                 }
@@ -326,10 +372,10 @@ Generate comprehensive triage instructions as a JSON object with:
                     "attack_type": "Normal File",
                     "category": "Normal",
                     "threat_level": "LOW",
-                    "confidence_score": 0.99,
+                    "confidence_score": 0.95,
                     "mitre_technique": "N/A",
-                    "summary": f"File '{fname}' verified safe against known threat models.",
-                    "root_cause": "Standard authorized host download.",
+                    "summary": f"File '{fname}' verified clean with no malicious signatures.",
+                    "root_cause": "Standard authorized user activity.",
                     "firewall_rule": "None",
                     "recommended_action": "No action required."
                 }
@@ -337,6 +383,23 @@ Generate comprehensive triage instructions as a JSON object with:
         # B. Network & Socket Threat Evaluation
         port = telemetry.get("port") or telemetry.get("target_port") or telemetry.get("dport", 0)
         sip = telemetry.get("source_ip") or telemetry.get("remote_addr") or "192.168.1.105"
+        payload_str = str(telemetry.get("payload") or telemetry.get("command") or "").lower()
+        proc_str = str(telemetry.get("process_name") or telemetry.get("process") or "").lower()
+
+        if any(bad in payload_str for bad in ["iex", "downloadstring", "reverse shell", "nc -e", "meterpreter", "mimikatz", "vssadmin", "delete shadows", "whoami /priv", "cmd.exe /c powershell", "base64", "payload.ps1"]):
+            return {
+                "is_intrusion": True,
+                "verdict": "ATTACK",
+                "attack_type": "Remote Code Execution / C2 Reverse Shell",
+                "category": "R2L",
+                "threat_level": "CRITICAL",
+                "confidence_score": 0.99,
+                "mitre_technique": "T1059.001 - Command and Scripting Interpreter: PowerShell",
+                "summary": f"Detected interactive hostile command execution signature originating from {sip}.",
+                "root_cause": "Hostile script execution or in-memory injection attempting remote access.",
+                "firewall_rule": f"netsh advfirewall firewall add rule name=\"Block_RCE_{sip}\" dir=in action=block remoteip={sip}",
+                "recommended_action": "Terminate originating PID and deploy perimeter firewall block."
+            }
 
         if port in [4444, 1337, 5555, 6667]:
             return {
