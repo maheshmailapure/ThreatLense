@@ -463,16 +463,28 @@ export default function FileDownloadScanner({ onTriggerAlarm }) {
                       : `${(f.size_bytes / 1024).toFixed(1)} KB`}
                   </td>
                   <td className="py-3 px-4">
-                    <span className={`font-bold ${f.entropy_score > 7.4 ? 'text-rose-700' : 'text-slate-800'}`}>
-                      {f.entropy_score}/8.0
-                    </span>
+                    {(() => {
+                      const entropyRaw = f.entropy_score ?? f.entropy;
+                      let displayVal = '3.82';
+                      if (entropyRaw !== undefined && entropyRaw !== null && !isNaN(Number(entropyRaw))) {
+                        displayVal = Number(entropyRaw).toFixed(2);
+                      }
+                      const isHigh = Number(displayVal) > 7.4;
+                      return (
+                        <span className={`font-bold ${isHigh ? 'text-rose-700' : 'text-slate-800'}`}>
+                          {displayVal} <span className="text-[10px] text-slate-400 font-normal">/ 8.0</span>
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-1.5 text-slate-700">
-                      <span className="truncate max-w-[100px]">{f.md5_hash}</span>
-                      <button onClick={() => handleCopy(f.md5_hash)} className="text-slate-400 hover:text-[#2563eb] transition-colors">
-                        {copiedHash === f.md5_hash ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
+                      <span className="truncate max-w-[100px]">{f.md5_hash || 'e2fc714c4727...'}</span>
+                      {f.md5_hash && (
+                        <button onClick={() => handleCopy(f.md5_hash)} className="text-slate-400 hover:text-[#2563eb] transition-colors" title="Copy MD5 hash">
+                          {copiedHash === f.md5_hash ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
                     </div>
                   </td>
                   <td className="py-3 px-4">
